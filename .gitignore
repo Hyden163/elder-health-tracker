@@ -2,3 +2,4 @@ node_modules/
 .npm-cache/
 server.log
 .DS_Store
+health-app-package.zip
