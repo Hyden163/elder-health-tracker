@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": 1778916918520,
+      "recordedAt": "2026-05-16",
+      "period": "morning",
+      "heartRate": 110,
+      "systolic": 120,
+      "diastolic": 70,
+      "spo2": 99,
+      "createdAt": "2026-05-16T07:35:18.520Z"
+    },
+    {
+      "id": 1778917020020,
+      "recordedAt": "2026-05-16",
+      "period": "evening",
+      "heartRate": 130,
+      "systolic": 80,
+      "diastolic": 50,
+      "spo2": 90,
+      "createdAt": "2026-05-16T07:37:00.020Z"
+    }
+  ]
+}

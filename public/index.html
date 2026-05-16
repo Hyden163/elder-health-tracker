@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>老人健康记录</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="page-header">
+      <div>
+        <h1>健康记录</h1>
+        <p>早晚各一次录入心率、血压和血氧，查看近7天/30天/90天趋势。</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="card input-card">
+        <h2>今天的录入</h2>
+        <form id="entry-form">
+          <div class="field-row">
+            <label>日期</label>
+            <input type="date" id="recordedAt" required />
+          </div>
+          <div class="field-row">
+            <label>时间</label>
+            <select id="period" required>
+              <option value="morning">早晨</option>
+              <option value="evening">晚上</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label>心率</label>
+            <input type="number" id="heartRate" min="30" max="180" placeholder="次/分钟" required />
+          </div>
+          <div class="field-row">
+            <label>高压</label>
+            <input type="number" id="systolic" min="80" max="220" placeholder="收缩压" required />
+          </div>
+          <div class="field-row">
+            <label>低压</label>
+            <input type="number" id="diastolic" min="40" max="140" placeholder="舒张压" required />
+          </div>
+          <div class="field-row">
+            <label>血氧</label>
+            <input type="number" id="spo2" min="70" max="100" placeholder="%" required />
+          </div>
+          <button type="submit" class="btn-submit">提交录入</button>
+          <div id="message" class="message"></div>
+        </form>
+      </section>
+
+      <section class="card chart-card">
+        <div class="chart-header">
+          <h2>趋势图</h2>
+          <div class="range-buttons">
+            <button data-range="7" class="range-btn active">近7天</button>
+            <button data-range="30" class="range-btn">近30天</button>
+            <button data-range="90" class="range-btn">近90天</button>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-box"><canvas id="heartRateChart"></canvas></div>
+          <div class="chart-box"><canvas id="bloodPressureChart"></canvas></div>
+          <div class="chart-box"><canvas id="spo2Chart"></canvas></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "elder-health-tracker",
+  "version": "1.0.0",
+  "description": "老人健康数据录入与趋势展示应用",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

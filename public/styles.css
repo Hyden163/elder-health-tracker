@@ -1,0 +1,165 @@
+:root {
+  --bg: #eef6ff;
+  --surface: #ffffff;
+  --surface-strong: #d3e7ff;
+  --text: #1f3f68;
+  --text-muted: #6b7c96;
+  --accent: #5a96ff;
+  --border: #d7e3f4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(180deg, #f5faff 0%, #eef6ff 100%);
+  color: var(--text);
+}
+
+.page-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.page-header {
+  padding: 24px 20px;
+  background: rgba(90, 150, 255, 0.12);
+  border-radius: 24px;
+  border: 1px solid rgba(90, 150, 255, 0.2);
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+main {
+  display: grid;
+  gap: 24px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(30, 68, 115, 0.06);
+}
+
+.input-card h2,
+.chart-card h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.field-row {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.field-row label {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.field-row input,
+.field-row select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+  color: var(--text);
+  background: #f9fcff;
+}
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn-submit:hover {
+  filter: brightness(1.05);
+}
+
+.message {
+  margin-top: 14px;
+  font-size: 14px;
+  color: #236b2f;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.range-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.range-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 14px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.range-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.chart-grid {
+  display: grid;
+  gap: 22px;
+  margin-top: 18px;
+}
+
+.chart-box {
+  padding: 16px;
+  background: #f7fbff;
+  border-radius: 18px;
+}
+
+@media (min-width: 840px) {
+  .chart-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-shell {
+    padding: 18px 12px 32px;
+  }
+  .field-row {
+    margin-bottom: 14px;
+  }
+}
