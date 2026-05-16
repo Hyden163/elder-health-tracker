@@ -1,0 +1,15 @@
+main:
+  push:
+    - name: build
+      stages:
+        - name: install
+          script: |
+            echo "Install dependencies"
+            if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        - name: package
+          script: |
+            echo "Package app into artifacts/app.zip"
+            mkdir -p artifacts
+            zip -r artifacts/app.zip . -x "node_modules/*" "artifacts/*" ".git/*" "*.log"
+      artifacts:
+        - artifacts/app.zip
