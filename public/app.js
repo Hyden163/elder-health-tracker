@@ -2,6 +2,7 @@ const entryForm = document.getElementById('entry-form');
 const messageEl = document.getElementById('message');
 const rangeButtons = document.querySelectorAll('.range-btn');
 const recordedAtInput = document.getElementById('recordedAt');
+const exportBtn = document.getElementById('export-btn');
 
 const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
 const bloodPressureCtx = document.getElementById('bloodPressureChart').getContext('2d');
@@ -132,6 +133,43 @@ function renderCharts(entries) {
   });
 }
 
+function escapeXml(value) {
+  return value
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function buildXml(entries) {
+  const rows = entries.map((item) => `  <entry>\n    <id>${escapeXml(item.id)}</id>\n    <recordedAt>${escapeXml(item.recordedAt)}</recordedAt>\n    <period>${escapeXml(item.period)}</period>\n    <heartRate>${escapeXml(item.heartRate)}</heartRate>\n    <systolic>${escapeXml(item.systolic)}</systolic>\n    <diastolic>${escapeXml(item.diastolic)}</diastolic>\n    <spo2>${escapeXml(item.spo2)}</spo2>\n    <createdAt>${escapeXml(item.createdAt)}</createdAt>\n  </entry>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<healthEntries>\n${rows}\n</healthEntries>`;
+}
+
+async function exportXml() {
+  try {
+    const response = await fetch(`/api/entries/xml?range=${currentRange}`);
+    if (!response.ok) {
+      throw new Error('导出失败');
+    }
+    const text = await response.text();
+    const blob = new Blob([text], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `health-records-${currentRange}d.xml`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    messageEl.textContent = 'XML 已生成，请检查下载文件。';
+  } catch (error) {
+    messageEl.textContent = '导出 XML 失败，请稍后重试。';
+  }
+}
+
 async function refreshCharts() {
   const entries = await fetchEntries(currentRange);
   renderCharts(entries);
@@ -176,5 +214,7 @@ rangeButtons.forEach((button) => {
     await refreshCharts();
   });
 });
+
+exportBtn.addEventListener('click', exportXml);
 
 refreshCharts();

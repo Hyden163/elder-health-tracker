@@ -43,6 +43,20 @@ function getStartDate(days) {
 
 initDatabase();
 
+function entriesToXml(entries) {
+  const escape = (value) => value
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  const rows = entries.map((item) => `  <entry>\n    <id>${escape(item.id)}</id>\n    <recordedAt>${escape(item.recordedAt)}</recordedAt>\n    <period>${escape(item.period)}</period>\n    <heartRate>${escape(item.heartRate)}</heartRate>\n    <systolic>${escape(item.systolic)}</systolic>\n    <diastolic>${escape(item.diastolic)}</diastolic>\n    <spo2>${escape(item.spo2)}</spo2>\n    <createdAt>${escape(item.createdAt)}</createdAt>\n  </entry>`).join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<healthEntries>\n${rows}\n</healthEntries>`;
+}
+
 app.get('/api/entries', (req, res) => {
   const range = req.query.range || '7';
   const days = Number(range);
@@ -62,6 +76,30 @@ app.get('/api/entries', (req, res) => {
     });
 
   res.json({ entries });
+});
+
+app.get('/api/entries/xml', (req, res) => {
+  const range = req.query.range || '7';
+  const days = Number(range);
+  if (![7, 30, 90].includes(days)) {
+    return res.status(400).json({ error: 'range 参数必须为 7、30 或 90' });
+  }
+
+  const db = loadDatabase();
+  const startDate = getStartDate(days);
+  const entries = db.entries
+    .filter((item) => new Date(item.recordedAt) >= startDate)
+    .sort((a, b) => {
+      const timeA = new Date(a.recordedAt).getTime();
+      const timeB = new Date(b.recordedAt).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return a.period === 'morning' ? -1 : 1;
+    });
+
+  const xml = entriesToXml(entries);
+  res.header('Content-Type', 'application/xml');
+  res.attachment(`health-records-${days}d.xml`);
+  res.send(xml);
 });
 
 app.post('/api/entries', (req, res) => {

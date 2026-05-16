@@ -34,6 +34,22 @@
 - Heroku
 - 其他支持 Node.js 的云服务
 
+## 新增功能：XML 导出
+
+应用已新增“导出 XML”功能，用户可以在趋势图页面点击“导出 XML”按钮，将当前选择时间范围内的数据导出为 XML 文件。
+
+导出的 XML 文件将包含：
+
+- id
+- recordedAt
+- period
+- heartRate
+- systolic
+- diastolic
+- spo2
+- createdAt
+
+导出按钮位于趋势图区域，支持近7天/近30天/近90天的数据导出。
 ### 推荐方式：使用 Render or Railway
 
 1. 在 GitHub 上创建一个仓库。

@@ -19,6 +19,16 @@
       "diastolic": 50,
       "spo2": 90,
       "createdAt": "2026-05-16T07:37:00.020Z"
+    },
+    {
+      "id": 1778939719496,
+      "recordedAt": "2026-05-17",
+      "period": "morning",
+      "heartRate": 120,
+      "systolic": 80,
+      "diastolic": 60,
+      "spo2": 99,
+      "createdAt": "2026-05-16T13:55:19.496Z"
     }
   ]
 }
