@@ -1,11 +1,21 @@
 main:
   push:
-    - name: build
+    - name: ci
+      docker:
+        image: node:24
       stages:
         - name: install
           script: |
             echo "Install dependencies"
             if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        - name: test
+          script: |
+            echo "Run tests if defined"
+            if node -e "try{const p=require('./package.json'); console.log(p.scripts&&p.scripts.test?1:0)}catch(e){console.log(0)}" | grep -q "1"; then
+              npm test || exit $?;
+            else
+              echo "no test script, skipping"
+            fi
         - name: package
           script: |
             echo "Package app into artifacts/app.zip"
@@ -13,3 +23,26 @@ main:
             zip -r artifacts/app.zip . -x "node_modules/*" "artifacts/*" ".git/*" "*.log"
       artifacts:
         - artifacts/app.zip
+
+    - name: upload-artifact
+      stages:
+        - name: upload-artifact
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - artifacts/app.zip
+
+    - name: deploy-demo
+      # 仅在 main 分支自动触发部署示例，可根据需要改为手动触发
+      if: '[ "$CNB_BRANCH" = "main" ]'
+      docker:
+        image: node:24
+      stages:
+        - name: deploy
+          script: |
+            echo "Deploy step (demo): install and verify start script"
+            if [ -f package-lock.json ]; then npm ci; else npm install; fi
+            # CNB 的正式部署请在控制台使用“部署服务”来对外暴露端口；此处只是验证启动是否可运行
+            npm start &
+            sleep 2
+            echo "Process started"
