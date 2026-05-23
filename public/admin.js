@@ -9,6 +9,11 @@ const tableBody = document.getElementById('table-body');
 const recordCountEl = document.getElementById('record-count');
 const downloadBtn = document.getElementById('download-btn');
 const rangeButtons = document.querySelectorAll('.admin-toolbar .range-btn');
+const passwordForm = document.getElementById('password-form');
+const passwordMessage = document.getElementById('password-message');
+const oldPasswordInput = document.getElementById('old-password');
+const newPasswordInput = document.getElementById('new-password');
+const confirmPasswordInput = document.getElementById('confirm-password');
 const typeTabs = document.querySelectorAll('.type-tab');
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -48,6 +53,12 @@ function apiUrl(path) {
   url.searchParams.set('key', adminKey);
   url.searchParams.set('type', currentType);
   return url.toString();
+}
+
+function showPasswordMessage(text, isError = false) {
+  passwordMessage.textContent = text;
+  passwordMessage.classList.remove('hidden', 'error');
+  passwordMessage.classList.toggle('error', isError);
 }
 
 function showLoginMessage(text, isError = false) {
@@ -135,11 +146,7 @@ async function loadEntries() {
       sessionStorage.removeItem(STORAGE_KEY);
       adminKey = '';
       showLoginView();
-      showLoginMessage(result.error || '管理员密钥无效，请重新登录。', true);
-      return;
-    }
-    if (response.status === 503) {
-      showLoginMessage(result.error || '服务器未配置管理员密钥。', true);
+      showLoginMessage(result.error || '管理员密码无效，请重新登录。', true);
       return;
     }
     if (!response.ok) {
@@ -163,23 +170,21 @@ function downloadCsv() {
 
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  adminKey = adminKeyInput.value.trim();
+  adminKey = adminKeyInput.value;
   if (!adminKey) {
-    showLoginMessage('请输入管理员密钥。', true);
+    showLoginMessage('请输入管理员密码。', true);
     return;
   }
 
   try {
-    const response = await fetch(apiUrl('/api/admin/entries?range=7'), {
-      headers: { 'x-admin-key': adminKey },
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminKey }),
     });
     const result = await response.json();
     if (response.status === 401) {
-      showLoginMessage(result.error || '管理员密钥错误。', true);
-      return;
-    }
-    if (response.status === 503) {
-      showLoginMessage(result.error || '服务器未配置 ADMIN_KEY。', true);
+      showLoginMessage(result.error || '管理员密码错误。', true);
       return;
     }
     if (!response.ok) {
@@ -194,6 +199,51 @@ loginForm.addEventListener('submit', async (event) => {
     await loadEntries();
   } catch (error) {
     showLoginMessage('网络异常，请稍后重试。', true);
+  }
+});
+
+passwordForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const oldPassword = oldPasswordInput.value;
+  const newPassword = newPasswordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
+
+  if (newPassword !== confirmPassword) {
+    showPasswordMessage('两次输入的新密码不一致。', true);
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/admin/password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': adminKey,
+      },
+      body: JSON.stringify({ oldPassword, newPassword, confirmPassword }),
+    });
+    const result = await response.json();
+    if (response.status === 401) {
+      if (result.error && result.error.includes('旧密码')) {
+        showPasswordMessage(result.error, true);
+        return;
+      }
+      sessionStorage.removeItem(STORAGE_KEY);
+      adminKey = '';
+      showLoginView();
+      showLoginMessage(result.error || '登录已失效，请重新登录。', true);
+      return;
+    }
+    if (!response.ok) {
+      showPasswordMessage(result.error || '修改失败。', true);
+      return;
+    }
+    adminKey = newPassword;
+    sessionStorage.setItem(STORAGE_KEY, adminKey);
+    passwordForm.reset();
+    showPasswordMessage('密码已更新，请妥善记住新密码。');
+  } catch (error) {
+    showPasswordMessage('网络异常，请稍后重试。', true);
   }
 });
 

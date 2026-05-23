@@ -88,6 +88,31 @@
   color: var(--primary);
 }
 
+.admin-settings-card h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.admin-settings-hint {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.admin-settings-card {
+  margin-bottom: 16px;
+}
+
+.btn-settings {
+  width: 100%;
+  max-width: 320px;
+}
+
+.admin-settings-card .message {
+  margin-top: 12px;
+}
+
 .admin-toolbar {
   margin-bottom: 16px;
 }

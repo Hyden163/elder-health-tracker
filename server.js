@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const cors = require('cors');
 
 const app = express();
@@ -8,7 +9,8 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'health.json');
 const FAMILY_ACCESS_KEY = process.env.FAMILY_ACCESS_KEY || '';
-const ADMIN_KEY = process.env.ADMIN_KEY || '';
+const DEFAULT_ADMIN_PASSWORD = '123456';
+const ADMIN_PASSWORD_MIN_LENGTH = 6;
 
 app.use(cors());
 app.use(express.json());
@@ -25,13 +27,51 @@ function requireFamilyKey(req, res, next) {
   return next();
 }
 
-function requireAdmin(req, res, next) {
-  if (!ADMIN_KEY) {
-    return res.status(503).json({ error: '服务器未配置 ADMIN_KEY，无法使用管理后台' });
+function hashAdminPassword(password, salt) {
+  return crypto.scryptSync(password, salt, 64).toString('hex');
+}
+
+function createAdminAuth(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return {
+    salt,
+    hash: hashAdminPassword(password, salt),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function verifyAdminPassword(password, adminAuth) {
+  if (!adminAuth || !adminAuth.salt || !adminAuth.hash) {
+    return false;
   }
-  const key = req.query.key || req.headers['x-admin-key'];
-  if (key !== ADMIN_KEY) {
-    return res.status(401).json({ error: '管理员密钥无效或缺失' });
+  const hash = hashAdminPassword(password, adminAuth.salt);
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(adminAuth.hash, 'hex'));
+  } catch (error) {
+    return false;
+  }
+}
+
+function ensureAdminAuth(data) {
+  if (!data.admin || !data.admin.salt || !data.admin.hash) {
+    data.admin = createAdminAuth(DEFAULT_ADMIN_PASSWORD);
+    return true;
+  }
+  return false;
+}
+
+function getAdminCredential(req) {
+  return req.query.key || req.headers['x-admin-key'] || req.body?.password;
+}
+
+function requireAdmin(req, res, next) {
+  const password = getAdminCredential(req);
+  if (!password) {
+    return res.status(401).json({ error: '请输入管理员密码' });
+  }
+  const db = loadDatabase();
+  if (!verifyAdminPassword(password, db.admin)) {
+    return res.status(401).json({ error: '管理员密码错误' });
   }
   return next();
 }
@@ -46,9 +86,15 @@ function loadDatabase() {
     if (!data.glucoseEntries) {
       data.glucoseEntries = [];
     }
+    if (ensureAdminAuth(data)) {
+      saveDatabase(data);
+    }
     return data;
   } catch (error) {
-    return { cardioEntries: [], glucoseEntries: [] };
+    const data = { cardioEntries: [], glucoseEntries: [] };
+    ensureAdminAuth(data);
+    saveDatabase(data);
+    return data;
   }
 }
 
@@ -62,7 +108,9 @@ function initDatabase() {
     fs.mkdirSync(dir, { recursive: true });
   }
   if (!fs.existsSync(DB_PATH)) {
-    saveDatabase({ cardioEntries: [], glucoseEntries: [] });
+    const data = { cardioEntries: [], glucoseEntries: [] };
+    ensureAdminAuth(data);
+    saveDatabase(data);
   }
 }
 
@@ -173,6 +221,43 @@ function getAdminType(req) {
 }
 
 initDatabase();
+
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body || {};
+  if (!password) {
+    return res.status(400).json({ error: '请输入管理员密码' });
+  }
+  const db = loadDatabase();
+  if (!verifyAdminPassword(password, db.admin)) {
+    return res.status(401).json({ error: '管理员密码错误' });
+  }
+  res.json({ success: true });
+});
+
+app.post('/api/admin/password', requireAdmin, (req, res) => {
+  const { oldPassword, newPassword, confirmPassword } = req.body || {};
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ error: '请填写旧密码、新密码和确认密码' });
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: '两次输入的新密码不一致' });
+  }
+  if (newPassword.length < ADMIN_PASSWORD_MIN_LENGTH) {
+    return res.status(400).json({ error: `新密码至少需要 ${ADMIN_PASSWORD_MIN_LENGTH} 位` });
+  }
+  if (oldPassword === newPassword) {
+    return res.status(400).json({ error: '新密码不能与旧密码相同' });
+  }
+
+  const db = loadDatabase();
+  if (!verifyAdminPassword(oldPassword, db.admin)) {
+    return res.status(401).json({ error: '旧密码不正确' });
+  }
+
+  db.admin = createAdminAuth(newPassword);
+  saveDatabase(db);
+  res.json({ success: true });
+});
 
 app.get('/api/admin/entries', requireAdmin, (req, res) => {
   const range = req.query.range || '90';
