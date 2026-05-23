@@ -803,8 +803,10 @@ main {
   line-height: 1.5;
 }
 
-.glucose-grid {
+.glucose-stack {
+  display: grid;
   grid-template-columns: 1fr;
+  gap: 4px;
 }
 
 .btn-submit-glucose {
@@ -821,10 +823,6 @@ main {
 
 @media (min-width: 640px) {
   .branch-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .glucose-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
