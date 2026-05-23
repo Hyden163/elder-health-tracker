@@ -88,9 +88,52 @@
   color: var(--primary);
 }
 
-.admin-settings-card h2 {
-  margin: 0 0 8px;
-  font-size: 24px;
+.admin-settings-card {
+  margin-bottom: 16px;
+  padding: 20px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 16px 18px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.settings-toggle:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.settings-toggle-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--primary);
+  transition: transform 0.2s ease;
+}
+
+.settings-toggle[aria-expanded="true"] .settings-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.password-body {
+  margin-top: 20px;
+}
+
+.password-body.collapsed {
+  display: none;
 }
 
 .admin-settings-hint {
@@ -98,10 +141,6 @@
   color: var(--text-muted);
   font-size: 17px;
   line-height: 1.6;
-}
-
-.admin-settings-card {
-  margin-bottom: 16px;
 }
 
 .btn-settings {

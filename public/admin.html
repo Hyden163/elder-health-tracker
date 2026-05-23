@@ -29,7 +29,7 @@
 
     <section id="login-panel" class="card admin-login-card">
       <h2>管理员登录</h2>
-      <p class="admin-login-hint">请输入管理员密码。初始密码为 <code>123456</code>，登录后可在后台修改。</p>
+      <p class="admin-login-hint">请输入管理员密码。初始密码为 <code>123456</code>，登录后点击「管理密码」可修改。</p>
       <form id="login-form">
         <div class="field-row">
           <label for="admin-key">管理员密码</label>
@@ -68,9 +68,16 @@
       </section>
 
       <section class="card admin-settings-card">
-        <h2>修改管理员密码</h2>
-        <p class="admin-settings-hint">修改密码需验证旧密码，并两次输入新密码确认。</p>
-        <form id="password-form">
+        <button type="button" id="toggle-password-btn" class="settings-toggle" aria-expanded="false">
+          <span>管理密码</span>
+          <svg class="settings-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+
+        <div id="password-body" class="password-body collapsed">
+          <p class="admin-settings-hint">修改密码需验证旧密码，并两次输入新密码确认。</p>
+          <form id="password-form">
           <div class="field-row">
             <label for="old-password">旧密码</label>
             <input type="password" id="old-password" autocomplete="current-password" required />
@@ -85,7 +92,8 @@
           </div>
           <button type="submit" class="btn-submit btn-settings">保存新密码</button>
           <div id="password-message" class="message hidden" aria-live="polite"></div>
-        </form>
+          </form>
+        </div>
       </section>
 
       <section class="card admin-table-card">

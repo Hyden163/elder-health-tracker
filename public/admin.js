@@ -12,6 +12,8 @@ const deleteBtn = document.getElementById('delete-btn');
 const rangeButtons = document.querySelectorAll('.admin-toolbar .range-btn');
 const passwordForm = document.getElementById('password-form');
 const passwordMessage = document.getElementById('password-message');
+const togglePasswordBtn = document.getElementById('toggle-password-btn');
+const passwordBody = document.getElementById('password-body');
 const oldPasswordInput = document.getElementById('old-password');
 const newPasswordInput = document.getElementById('new-password');
 const confirmPasswordInput = document.getElementById('confirm-password');
@@ -396,6 +398,12 @@ typeTabs.forEach((tab) => {
 
 downloadBtn.addEventListener('click', downloadCsv);
 deleteBtn.addEventListener('click', deleteSelected);
+
+togglePasswordBtn.addEventListener('click', () => {
+  const expanded = togglePasswordBtn.getAttribute('aria-expanded') === 'true';
+  togglePasswordBtn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  passwordBody.classList.toggle('collapsed', expanded);
+});
 
 const urlKey = urlParams.get('key');
 if (urlKey) {
