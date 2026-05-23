@@ -4,13 +4,29 @@ const adminPanel = document.getElementById('admin-panel');
 const loginForm = document.getElementById('login-form');
 const loginMessage = document.getElementById('login-message');
 const adminKeyInput = document.getElementById('admin-key');
+const tableHead = document.getElementById('table-head');
 const tableBody = document.getElementById('table-body');
 const recordCountEl = document.getElementById('record-count');
 const downloadBtn = document.getElementById('download-btn');
-const rangeButtons = document.querySelectorAll('.range-btn');
+const rangeButtons = document.querySelectorAll('.admin-toolbar .range-btn');
+const typeTabs = document.querySelectorAll('.type-tab');
 
+const urlParams = new URLSearchParams(window.location.search);
 let currentRange = '90';
+let currentType = urlParams.get('type') === 'glucose' ? 'glucose' : 'cardio';
 let adminKey = sessionStorage.getItem(STORAGE_KEY) || '';
+let columnCount = 7;
+
+const TABLE_SCHEMA = {
+  cardio: {
+    headers: ['日期', '时段', '心率', '高压', '低压', '血氧', '录入时间'],
+    colspan: 7,
+  },
+  glucose: {
+    headers: ['日期', '空腹', '早餐后', '午餐后', '晚餐后', '录入时间'],
+    colspan: 6,
+  },
+};
 
 function periodLabel(period) {
   return period === 'morning' ? '早晨' : '晚上';
@@ -23,9 +39,14 @@ function formatCreatedAt(iso) {
   return date.toLocaleString('zh-CN', { hour12: false });
 }
 
+function formatGlucose(value) {
+  return value === null || value === undefined ? '—' : value;
+}
+
 function apiUrl(path) {
   const url = new URL(path, window.location.origin);
   url.searchParams.set('key', adminKey);
+  url.searchParams.set('type', currentType);
   return url.toString();
 }
 
@@ -45,11 +66,40 @@ function showLoginView() {
   adminPanel.classList.add('hidden');
 }
 
+function renderTableHead() {
+  const schema = TABLE_SCHEMA[currentType];
+  columnCount = schema.colspan;
+  tableHead.innerHTML = `<tr>${schema.headers.map((h) => `<th>${h}</th>`).join('')}</tr>`;
+}
+
+function setActiveTypeTab() {
+  typeTabs.forEach((tab) => {
+    const active = tab.dataset.type === currentType;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
+
 function renderTable(entries) {
   recordCountEl.textContent = `共 ${entries.length} 条记录`;
 
   if (!entries.length) {
-    tableBody.innerHTML = '<tr><td colspan="7" class="table-empty">该时间范围内暂无记录</td></tr>';
+    tableBody.innerHTML = `<tr><td colspan="${columnCount}" class="table-empty">该时间范围内暂无记录</td></tr>`;
+    return;
+  }
+
+  if (currentType === 'glucose') {
+    const sorted = [...entries].sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+    tableBody.innerHTML = sorted.map((item) => `
+      <tr>
+        <td>${item.recordedAt}</td>
+        <td>${formatGlucose(item.fasting)}</td>
+        <td>${formatGlucose(item.afterBreakfast)}</td>
+        <td>${formatGlucose(item.afterLunch)}</td>
+        <td>${formatGlucose(item.afterDinner)}</td>
+        <td>${formatCreatedAt(item.updatedAt || item.createdAt)}</td>
+      </tr>
+    `).join('');
     return;
   }
 
@@ -74,7 +124,8 @@ function renderTable(entries) {
 }
 
 async function loadEntries() {
-  tableBody.innerHTML = '<tr><td colspan="7" class="table-empty">加载中…</td></tr>';
+  renderTableHead();
+  tableBody.innerHTML = `<tr><td colspan="${columnCount}" class="table-empty">加载中…</td></tr>`;
   try {
     const response = await fetch(apiUrl(`/api/admin/entries?range=${currentRange}`), {
       headers: { 'x-admin-key': adminKey },
@@ -94,16 +145,20 @@ async function loadEntries() {
     if (!response.ok) {
       throw new Error(result.error || '加载失败');
     }
+    if (result.type === 'glucose' || result.type === 'cardio') {
+      currentType = result.type;
+      setActiveTypeTab();
+      renderTableHead();
+    }
     renderTable(result.entries || []);
   } catch (error) {
-    tableBody.innerHTML = `<tr><td colspan="7" class="table-empty">${error.message || '加载失败，请稍后重试'}</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="${columnCount}" class="table-empty">${error.message || '加载失败，请稍后重试'}</td></tr>`;
     recordCountEl.textContent = '共 0 条记录';
   }
 }
 
 function downloadCsv() {
-  const url = apiUrl(`/api/admin/entries/export?range=${currentRange}`);
-  window.location.href = url;
+  window.location.href = apiUrl(`/api/admin/entries/export?range=${currentRange}`);
 }
 
 loginForm.addEventListener('submit', async (event) => {
@@ -135,6 +190,7 @@ loginForm.addEventListener('submit', async (event) => {
     showAdminView();
     currentRange = '90';
     rangeButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.range === '90'));
+    setActiveTypeTab();
     await loadEntries();
   } catch (error) {
     showLoginMessage('网络异常，请稍后重试。', true);
@@ -150,14 +206,27 @@ rangeButtons.forEach((button) => {
   });
 });
 
+typeTabs.forEach((tab) => {
+  tab.addEventListener('click', async () => {
+    currentType = tab.dataset.type === 'glucose' ? 'glucose' : 'cardio';
+    setActiveTypeTab();
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('type', currentType);
+    window.history.replaceState({}, '', nextUrl);
+    await loadEntries();
+  });
+});
+
 downloadBtn.addEventListener('click', downloadCsv);
 
-const urlKey = new URLSearchParams(window.location.search).get('key');
+const urlKey = urlParams.get('key');
 if (urlKey) {
   adminKey = urlKey;
   sessionStorage.setItem(STORAGE_KEY, adminKey);
   adminKeyInput.value = urlKey;
 }
+
+setActiveTypeTab();
 
 if (adminKey) {
   showAdminView();

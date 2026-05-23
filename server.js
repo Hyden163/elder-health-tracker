@@ -12,6 +12,7 @@ const ADMIN_KEY = process.env.ADMIN_KEY || '';
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 function requireFamilyKey(req, res, next) {
   if (!FAMILY_ACCESS_KEY) {
@@ -34,14 +35,20 @@ function requireAdmin(req, res, next) {
   }
   return next();
 }
-app.use(express.static(path.join(__dirname, 'public')));
 
 function loadDatabase() {
   try {
     const raw = fs.readFileSync(DB_PATH, 'utf8');
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    if (!data.cardioEntries) {
+      data.cardioEntries = data.entries || [];
+    }
+    if (!data.glucoseEntries) {
+      data.glucoseEntries = [];
+    }
+    return data;
   } catch (error) {
-    return { entries: [] };
+    return { cardioEntries: [], glucoseEntries: [] };
   }
 }
 
@@ -55,7 +62,7 @@ function initDatabase() {
     fs.mkdirSync(dir, { recursive: true });
   }
   if (!fs.existsSync(DB_PATH)) {
-    saveDatabase({ entries: [] });
+    saveDatabase({ cardioEntries: [], glucoseEntries: [] });
   }
 }
 
@@ -66,9 +73,7 @@ function getStartDate(days) {
   return now;
 }
 
-initDatabase();
-
-function sortEntries(entries) {
+function sortCardioEntries(entries) {
   return [...entries].sort((a, b) => {
     const timeA = new Date(a.recordedAt).getTime();
     const timeB = new Date(b.recordedAt).getTime();
@@ -77,23 +82,39 @@ function sortEntries(entries) {
   });
 }
 
-function filterEntriesByRange(entries, range) {
+function sortGlucoseEntries(entries) {
+  return [...entries].sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
+}
+
+function filterByRange(entries, range, sorter) {
   if (range === 'all') {
-    return sortEntries(entries);
+    return sorter(entries);
   }
   const days = Number(range);
   if (![7, 30, 90].includes(days)) {
     return null;
   }
   const startDate = getStartDate(days);
-  return sortEntries(entries.filter((item) => new Date(item.recordedAt) >= startDate));
+  return sorter(entries.filter((item) => new Date(item.recordedAt) >= startDate));
 }
 
 function periodLabel(period) {
   return period === 'morning' ? '早晨' : '晚上';
 }
 
-function entriesToCsv(entries) {
+function parseOptionalNumber(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function formatGlucoseCell(value) {
+  return value === null || value === undefined ? '' : value;
+}
+
+function cardioToCsv(entries) {
   const header = ['日期', '时段', '心率(次/分)', '高压(mmHg)', '低压(mmHg)', '血氧(%)', '录入时间'];
   const rows = entries.map((item) => [
     item.recordedAt,
@@ -104,6 +125,23 @@ function entriesToCsv(entries) {
     item.spo2,
     item.createdAt,
   ]);
+  return rowsToCsv(header, rows);
+}
+
+function glucoseToCsv(entries) {
+  const header = ['日期', '空腹(mmol/L)', '早餐后(mmol/L)', '午餐后(mmol/L)', '晚餐后(mmol/L)', '录入时间'];
+  const rows = entries.map((item) => [
+    item.recordedAt,
+    formatGlucoseCell(item.fasting),
+    formatGlucoseCell(item.afterBreakfast),
+    formatGlucoseCell(item.afterLunch),
+    formatGlucoseCell(item.afterDinner),
+    item.updatedAt || item.createdAt,
+  ]);
+  return rowsToCsv(header, rows);
+}
+
+function rowsToCsv(header, rows) {
   const escapeCell = (value) => {
     const text = String(value ?? '');
     if (/[",\n]/.test(text)) {
@@ -129,27 +167,41 @@ function entriesToXml(entries) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<healthEntries>\n${rows}\n</healthEntries>`;
 }
 
+function getAdminType(req) {
+  const type = req.query.type || 'cardio';
+  return type === 'glucose' ? 'glucose' : 'cardio';
+}
+
+initDatabase();
+
 app.get('/api/admin/entries', requireAdmin, (req, res) => {
   const range = req.query.range || '90';
+  const type = getAdminType(req);
   const db = loadDatabase();
-  const entries = filterEntriesByRange(db.entries, range);
+  const source = type === 'glucose' ? db.glucoseEntries : db.cardioEntries;
+  const sorter = type === 'glucose' ? sortGlucoseEntries : sortCardioEntries;
+  const entries = filterByRange(source, range, sorter);
   if (!entries) {
     return res.status(400).json({ error: 'range 参数必须为 7、30、90 或 all' });
   }
-  res.json({ entries });
+  res.json({ entries, type });
 });
 
 app.get('/api/admin/entries/export', requireAdmin, (req, res) => {
   const range = req.query.range || 'all';
+  const type = getAdminType(req);
   const db = loadDatabase();
-  const entries = filterEntriesByRange(db.entries, range);
+  const source = type === 'glucose' ? db.glucoseEntries : db.cardioEntries;
+  const sorter = type === 'glucose' ? sortGlucoseEntries : sortCardioEntries;
+  const entries = filterByRange(source, range, sorter);
   if (!entries) {
     return res.status(400).json({ error: 'range 参数必须为 7、30、90 或 all' });
   }
-  const csv = entriesToCsv(entries);
+  const csv = type === 'glucose' ? glucoseToCsv(entries) : cardioToCsv(entries);
+  const prefix = type === 'glucose' ? 'glucose-records' : 'cardio-records';
   const suffix = range === 'all' ? 'all' : `${range}d`;
   res.header('Content-Type', 'text/csv; charset=utf-8');
-  res.attachment(`health-records-${suffix}.csv`);
+  res.attachment(`${prefix}-${suffix}.csv`);
   res.send(csv);
 });
 
@@ -157,17 +209,21 @@ app.use('/api', requireFamilyKey);
 
 app.get('/api/entries', (req, res) => {
   const range = req.query.range || '7';
-  const days = Number(range);
-  if (![7, 30, 90].includes(days)) {
-    return res.status(400).json({ error: 'range 参数必须为 7、30 或 90' });
-  }
-
   const db = loadDatabase();
-  const entries = filterEntriesByRange(db.entries, String(days));
+  const entries = filterByRange(db.cardioEntries, String(Number(range)), sortCardioEntries);
   if (!entries) {
     return res.status(400).json({ error: 'range 参数必须为 7、30 或 90' });
   }
+  res.json({ entries });
+});
 
+app.get('/api/glucose/entries', (req, res) => {
+  const range = req.query.range || '7';
+  const db = loadDatabase();
+  const entries = filterByRange(db.glucoseEntries, String(Number(range)), sortGlucoseEntries);
+  if (!entries) {
+    return res.status(400).json({ error: 'range 参数必须为 7、30 或 90' });
+  }
   res.json({ entries });
 });
 
@@ -177,10 +233,8 @@ app.get('/api/entries/xml', (req, res) => {
   if (![7, 30, 90].includes(days)) {
     return res.status(400).json({ error: 'range 参数必须为 7、30 或 90' });
   }
-
   const db = loadDatabase();
-  const entries = filterEntriesByRange(db.entries, String(days));
-
+  const entries = filterByRange(db.cardioEntries, String(days), sortCardioEntries);
   const xml = entriesToXml(entries);
   res.header('Content-Type', 'application/xml');
   res.attachment(`health-records-${days}d.xml`);
@@ -205,16 +259,57 @@ app.post('/api/entries', (req, res) => {
     createdAt: new Date().toISOString(),
   };
 
-  db.entries.push(newEntry);
+  db.cardioEntries.push(newEntry);
   saveDatabase(db);
   res.json({ success: true, id: newEntry.id });
 });
 
-app.get('*', (req, res, next) => {
-  if (req.path === '/admin' || req.path.startsWith('/admin/')) {
-    return res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+app.post('/api/glucose/entries', (req, res) => {
+  const { recordedAt, fasting, afterBreakfast, afterLunch, afterDinner } = req.body;
+  if (!recordedAt) {
+    return res.status(400).json({ error: '请提供日期' });
   }
-  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+
+  const values = {
+    fasting: parseOptionalNumber(fasting),
+    afterBreakfast: parseOptionalNumber(afterBreakfast),
+    afterLunch: parseOptionalNumber(afterLunch),
+    afterDinner: parseOptionalNumber(afterDinner),
+  };
+
+  if (Object.values(values).every((v) => v === null)) {
+    return res.status(400).json({ error: '请至少填写一项血糖数值' });
+  }
+
+  const db = loadDatabase();
+  const index = db.glucoseEntries.findIndex((item) => item.recordedAt === recordedAt);
+  const now = new Date().toISOString();
+
+  if (index >= 0) {
+    const existing = db.glucoseEntries[index];
+    db.glucoseEntries[index] = {
+      ...existing,
+      ...Object.fromEntries(Object.entries(values).filter(([, v]) => v !== null)),
+      updatedAt: now,
+    };
+    saveDatabase(db);
+    return res.json({ success: true, id: db.glucoseEntries[index].id, updated: true });
+  }
+
+  const newEntry = {
+    id: Date.now(),
+    recordedAt,
+    fasting: values.fasting,
+    afterBreakfast: values.afterBreakfast,
+    afterLunch: values.afterLunch,
+    afterDinner: values.afterDinner,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  db.glucoseEntries.push(newEntry);
+  saveDatabase(db);
+  res.json({ success: true, id: newEntry.id, updated: false });
 });
 
 app.listen(PORT, () => {

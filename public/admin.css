@@ -51,6 +51,43 @@
   font-size: 15px;
 }
 
+.admin-type-tabs {
+  padding: 16px 20px;
+}
+
+.type-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.type-tab {
+  flex: 1;
+  min-width: 140px;
+  min-height: var(--touch-min);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 18px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.type-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.type-tab.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .admin-toolbar {
   margin-bottom: 16px;
 }

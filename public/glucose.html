@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#F7FAF9" />
+  <title>血糖记录 · 老人健康记录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#entry-form">跳到录入表单</a>
+
+  <div class="page-shell">
+    <div id="wechat-tip" class="wechat-tip hidden" role="status">
+      您正在微信中打开。录入完成后可点「复制摘要」发到家庭群。
+    </div>
+
+    <header class="page-header">
+      <div class="header-icon header-icon-glucose" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>血糖记录</h1>
+        <p>记录空腹与三餐后血糖，一天一条</p>
+      </div>
+      <a href="index.html" class="btn-link-home" id="link-home">返回首页</a>
+    </header>
+
+    <main>
+      <section class="card input-card">
+        <div class="section-badge section-badge-glucose">第一步 · 填写数据</div>
+        <h2>今天的录入</h2>
+        <p class="form-hint">同一天可多次提交，新填写的数值会合并到当天记录中。</p>
+
+        <form id="entry-form">
+          <div class="field-row">
+            <label for="recordedAt">日期</label>
+            <input type="date" id="recordedAt" required />
+          </div>
+
+          <div class="metrics-grid glucose-grid">
+            <div class="field-row">
+              <label for="fasting">早上空腹血糖</label>
+              <div class="input-with-unit">
+                <input type="number" id="fasting" min="2" max="30" step="0.1" inputmode="decimal" placeholder="5.6" />
+                <span class="unit">mmol/L</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="afterBreakfast">早餐后血糖</label>
+              <div class="input-with-unit">
+                <input type="number" id="afterBreakfast" min="2" max="30" step="0.1" inputmode="decimal" placeholder="7.8" />
+                <span class="unit">mmol/L</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="afterLunch">午餐后血糖</label>
+              <div class="input-with-unit">
+                <input type="number" id="afterLunch" min="2" max="30" step="0.1" inputmode="decimal" placeholder="8.2" />
+                <span class="unit">mmol/L</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="afterDinner">晚餐后血糖</label>
+              <div class="input-with-unit">
+                <input type="number" id="afterDinner" min="2" max="30" step="0.1" inputmode="decimal" placeholder="7.5" />
+                <span class="unit">mmol/L</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit btn-submit-glucose">提交录入</button>
+          <div id="message" class="message" aria-live="polite"></div>
+        </form>
+
+        <div id="summary-panel" class="summary-panel hidden">
+          <div class="section-badge section-badge-success">第二步 · 发给家人</div>
+          <h3>今日录入摘要</h3>
+          <p id="summary-text" class="summary-text"></p>
+          <button type="button" id="copy-summary-btn" class="btn-copy">复制摘要，发到微信群</button>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <button type="button" id="toggle-charts-btn" class="chart-toggle" aria-expanded="false">
+          <span>查看趋势与历史记录</span>
+          <svg class="chart-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+
+        <div id="charts-body" class="charts-body collapsed">
+          <div class="chart-header">
+            <h2>趋势图</h2>
+            <div class="range-buttons" role="group" aria-label="时间范围">
+              <button type="button" data-range="7" class="range-btn active">近7天</button>
+              <button type="button" data-range="30" class="range-btn">近30天</button>
+              <button type="button" data-range="90" class="range-btn">近90天</button>
+            </div>
+            <a href="admin.html?type=glucose" class="btn-admin" id="link-admin">管理后台</a>
+          </div>
+
+          <section class="recent-list-section">
+            <h3>最近记录</h3>
+            <p class="recent-list-hint">列表比图表更清楚，适合在手机里快速查看。</p>
+            <div id="recent-list" class="recent-list"></div>
+          </section>
+
+          <div class="chart-grid chart-grid-single">
+            <div class="chart-box"><canvas id="glucoseChart" aria-label="血糖趋势图"></canvas></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const key = new URLSearchParams(window.location.search).get('key');
+      if (!key) return;
+      ['link-home', 'link-admin'].forEach((id) => {
+        const el = document.getElementById(id);
+        const url = new URL(el.getAttribute('href'), window.location.origin);
+        url.searchParams.set('key', key);
+        el.setAttribute('href', `${url.pathname}${url.search}`);
+      });
+    })();
+  </script>
+  <script src="glucose.js"></script>
+</body>
+</html>

@@ -24,7 +24,7 @@
         <h1>管理后台</h1>
         <p>查看完整记录，下载 Excel 表格（CSV）</p>
       </div>
-      <a href="/" class="btn-link-home">返回录入页</a>
+      <a href="index.html" class="btn-link-home">返回首页</a>
     </header>
 
     <section id="login-panel" class="card admin-login-card">
@@ -41,6 +41,13 @@
     </section>
 
     <section id="admin-panel" class="hidden">
+      <section class="card admin-type-tabs">
+        <div class="type-tabs" role="tablist" aria-label="数据类型">
+          <button type="button" class="type-tab active" data-type="cardio" role="tab" aria-selected="true">心血管数据</button>
+          <button type="button" class="type-tab" data-type="glucose" role="tab" aria-selected="false">血糖数据</button>
+        </div>
+      </section>
+
       <section class="card admin-toolbar">
         <div class="admin-toolbar-row">
           <h2>数据表格</h2>
@@ -60,7 +67,7 @@
       <section class="card admin-table-card">
         <div class="table-scroll">
           <table class="data-table" id="data-table">
-            <thead>
+            <thead id="table-head">
               <tr>
                 <th>日期</th>
                 <th>时段</th>

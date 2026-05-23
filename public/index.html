@@ -9,130 +9,54 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#entry-form">跳到录入表单</a>
-
-  <div class="page-shell">
-    <div id="wechat-tip" class="wechat-tip hidden" role="status">
-      您正在微信中打开。录入完成后可点「复制摘要」发到家庭群。
-    </div>
-
-    <header class="page-header">
-      <div class="header-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
-      </div>
-      <div class="header-text">
-        <h1>健康记录</h1>
-        <p>早晚各录一次，数据家人都能看</p>
+  <div class="page-shell home-shell">
+    <header class="page-header home-header">
+      <div class="header-text header-text-center">
+        <h1>老人健康记录</h1>
+        <p>请选择今天要记录的项目</p>
       </div>
     </header>
 
-    <main>
-      <section class="card input-card">
-        <div class="section-badge">第一步 · 填写数据</div>
-        <h2>今天的录入</h2>
-
-        <form id="entry-form">
-          <div class="field-row">
-            <label for="recordedAt">日期</label>
-            <input type="date" id="recordedAt" required />
-          </div>
-
-          <div class="field-row">
-            <span class="field-label" id="period-label">时段</span>
-            <div class="period-toggle" role="group" aria-labelledby="period-label">
-              <button type="button" class="period-btn active" data-period="morning" aria-pressed="true">早晨</button>
-              <button type="button" class="period-btn" data-period="evening" aria-pressed="false">晚上</button>
-            </div>
-            <input type="hidden" id="period" value="morning" />
-          </div>
-
-          <div class="metrics-grid">
-            <div class="field-row">
-              <label for="heartRate">心率</label>
-              <div class="input-with-unit">
-                <input type="number" id="heartRate" min="30" max="180" inputmode="numeric" placeholder="72" required />
-                <span class="unit">次/分</span>
-              </div>
-            </div>
-
-            <div class="field-row field-row-wide">
-              <span class="field-label">血压</span>
-              <div class="bp-row">
-                <div class="input-with-unit">
-                  <label class="sr-only" for="systolic">高压</label>
-                  <input type="number" id="systolic" min="80" max="220" inputmode="numeric" placeholder="128" aria-label="高压" required />
-                  <span class="unit">高压</span>
-                </div>
-                <span class="bp-sep" aria-hidden="true">/</span>
-                <div class="input-with-unit">
-                  <label class="sr-only" for="diastolic">低压</label>
-                  <input type="number" id="diastolic" min="40" max="140" inputmode="numeric" placeholder="78" aria-label="低压" required />
-                  <span class="unit">低压</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="field-row">
-              <label for="spo2">血氧</label>
-              <div class="input-with-unit">
-                <input type="number" id="spo2" min="70" max="100" inputmode="numeric" placeholder="98" required />
-                <span class="unit">%</span>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" class="btn-submit">提交录入</button>
-          <div id="message" class="message" aria-live="polite"></div>
-        </form>
-
-        <div id="summary-panel" class="summary-panel hidden">
-          <div class="section-badge section-badge-success">第二步 · 发给家人</div>
-          <h3>今日录入摘要</h3>
-          <p id="summary-text" class="summary-text"></p>
-          <button type="button" id="copy-summary-btn" class="btn-copy">复制摘要，发到微信群</button>
-        </div>
-      </section>
-
-      <section class="card chart-card">
-        <button type="button" id="toggle-charts-btn" class="chart-toggle" aria-expanded="false">
-          <span>查看趋势与历史记录</span>
-          <svg class="chart-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M6 9l6 6 6-6"/>
+    <main class="branch-grid">
+      <a id="link-cardio" href="cardio.html" class="branch-card branch-card-cardio">
+        <div class="branch-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
-        </button>
-
-        <div id="charts-body" class="charts-body collapsed">
-          <div class="chart-header">
-            <h2>趋势图</h2>
-            <div class="range-buttons" role="group" aria-label="时间范围">
-              <button type="button" data-range="7" class="range-btn active">近7天</button>
-              <button type="button" data-range="30" class="range-btn">近30天</button>
-              <button type="button" data-range="90" class="range-btn">近90天</button>
-            </div>
-            <a href="/admin.html" class="btn-admin">管理后台</a>
-          </div>
-
-          <section class="recent-list-section">
-            <h3>最近记录</h3>
-            <p class="recent-list-hint">列表比图表更清楚，适合在手机里快速查看。</p>
-            <div id="recent-list" class="recent-list"></div>
-          </section>
-
-          <div class="chart-grid">
-            <div class="chart-box"><canvas id="heartRateChart" aria-label="心率趋势图"></canvas></div>
-            <div class="chart-box"><canvas id="bloodPressureChart" aria-label="血压趋势图"></canvas></div>
-            <div class="chart-box"><canvas id="spo2Chart" aria-label="血氧趋势图"></canvas></div>
-          </div>
         </div>
-      </section>
+        <h2>心血管数据</h2>
+        <p>记录心率、血压、血氧，早晚各一次</p>
+      </a>
+
+      <a id="link-glucose" href="glucose.html" class="branch-card branch-card-glucose">
+        <div class="branch-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+        </div>
+        <h2>血糖数据</h2>
+        <p>记录空腹与三餐后血糖</p>
+      </a>
     </main>
+
+    <p class="home-admin-link">
+      <a id="link-admin" href="admin.html">管理员入口</a>
+    </p>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    (function () {
+      const key = new URLSearchParams(window.location.search).get('key');
+      if (!key) return;
+      ['link-cardio', 'link-glucose', 'link-admin'].forEach((id) => {
+        const el = document.getElementById(id);
+        const url = new URL(el.getAttribute('href'), window.location.origin);
+        url.searchParams.set('key', key);
+        el.setAttribute('href', `${url.pathname}${url.search}`);
+      });
+    })();
+  </script>
 </body>
 </html>
