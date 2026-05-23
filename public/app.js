@@ -10,6 +10,15 @@ const copySummaryBtn = document.getElementById('copy-summary-btn');
 const toggleChartsBtn = document.getElementById('toggle-charts-btn');
 const chartsBody = document.getElementById('charts-body');
 const recentListEl = document.getElementById('recent-list');
+const periodInput = document.getElementById('period');
+const periodButtons = document.querySelectorAll('.period-btn');
+
+const CHART_TEXT = '#475569';
+const CHART_GRID = 'rgba(14, 116, 144, 0.12)';
+const COLOR_HEART = '#0E7490';
+const COLOR_SYSTOLIC = '#0891B2';
+const COLOR_DIASTOLIC = '#67E8F9';
+const COLOR_SPO2 = '#059669';
 
 const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
 const bloodPressureCtx = document.getElementById('bloodPressureChart').getContext('2d');
@@ -134,6 +143,27 @@ function renderRecentList(entries) {
   `).join('');
 }
 
+function resetPeriodToggle() {
+  periodInput.value = 'morning';
+  periodButtons.forEach((btn) => {
+    const isMorning = btn.dataset.period === 'morning';
+    btn.classList.toggle('active', isMorning);
+    btn.setAttribute('aria-pressed', isMorning ? 'true' : 'false');
+  });
+}
+
+periodButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    periodButtons.forEach((btn) => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+    button.classList.add('active');
+    button.setAttribute('aria-pressed', 'true');
+    periodInput.value = button.dataset.period;
+  });
+});
+
 function renderCharts(entries) {
   const { labels, heartData, systolicData, diastolicData, spo2Data } = buildDatasets(entries);
 
@@ -148,17 +178,17 @@ function renderCharts(entries) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: '#33415a' },
+          labels: { color: CHART_TEXT, font: { size: 14, family: "'Noto Sans SC', sans-serif" } },
         },
       },
       scales: {
         x: {
-          ticks: { color: '#4b607b', maxRotation: 45, minRotation: 0 },
-          grid: { color: 'rgba(90,150,255,0.12)' },
+          ticks: { color: CHART_TEXT, maxRotation: 45, minRotation: 0, font: { size: 12 } },
+          grid: { color: CHART_GRID },
         },
         y: {
-          ticks: { color: '#4b607b' },
-          grid: { color: 'rgba(90,150,255,0.12)' },
+          ticks: { color: CHART_TEXT, font: { size: 12 } },
+          grid: { color: CHART_GRID },
         },
       },
     },
@@ -172,8 +202,8 @@ function renderCharts(entries) {
       datasets: [{
         label: '心率 (次/分钟)',
         data: heartData,
-        borderColor: '#5a96ff',
-        backgroundColor: 'rgba(90,150,255,0.18)',
+        borderColor: COLOR_HEART,
+        backgroundColor: 'rgba(14, 116, 144, 0.15)',
         fill: true,
         tension: 0.3,
       }],
@@ -189,15 +219,15 @@ function renderCharts(entries) {
         {
           label: '高压 (mmHg)',
           data: systolicData,
-          borderColor: '#3974d3',
-          backgroundColor: 'rgba(57,116,211,0.18)',
+          borderColor: COLOR_SYSTOLIC,
+          backgroundColor: 'rgba(8, 145, 178, 0.15)',
           tension: 0.3,
         },
         {
           label: '低压 (mmHg)',
           data: diastolicData,
-          borderColor: '#82b1ff',
-          backgroundColor: 'rgba(130,177,255,0.18)',
+          borderColor: COLOR_DIASTOLIC,
+          backgroundColor: 'rgba(103, 232, 249, 0.2)',
           tension: 0.3,
         },
       ],
@@ -212,8 +242,8 @@ function renderCharts(entries) {
       datasets: [{
         label: '血氧 (%)',
         data: spo2Data,
-        borderColor: '#43b56b',
-        backgroundColor: 'rgba(67,181,107,0.18)',
+        borderColor: COLOR_SPO2,
+        backgroundColor: 'rgba(5, 150, 105, 0.15)',
         tension: 0.3,
       }],
     },
@@ -306,6 +336,7 @@ entryForm.addEventListener('submit', async (event) => {
       showSummary(payload);
       entryForm.reset();
       recordedAtInput.value = defaultDate;
+      resetPeriodToggle();
       chartsLoaded = false;
       await refreshData();
     } else {
