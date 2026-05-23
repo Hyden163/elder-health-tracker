@@ -1,0 +1,22 @@
+# Render 部署配置
+# 免费档：无持久化磁盘，适合先验证微信能否打开、能否录入（重新部署后数据可能清空）
+# 长期使用：在控制台把 Plan 改为 Starter，并添加 Disk 挂载 /var/data（见 README）
+
+services:
+  - type: web
+    name: elder-health-tracker
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+    # 升级为 Starter 后取消下面注释，并在控制台添加 Disk：mountPath=/var/data, size=1GB
+    # - key: DATA_DIR
+    #   value: /var/data
+    # disk:
+    #   name: health-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
