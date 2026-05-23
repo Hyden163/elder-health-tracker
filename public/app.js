@@ -2,7 +2,6 @@ const entryForm = document.getElementById('entry-form');
 const messageEl = document.getElementById('message');
 const rangeButtons = document.querySelectorAll('.range-btn');
 const recordedAtInput = document.getElementById('recordedAt');
-const exportBtn = document.getElementById('export-btn');
 const wechatTip = document.getElementById('wechat-tip');
 const summaryPanel = document.getElementById('summary-panel');
 const summaryText = document.getElementById('summary-text');
@@ -250,28 +249,6 @@ function renderCharts(entries) {
   });
 }
 
-async function exportXml() {
-  try {
-    const response = await fetch(apiUrl(`/api/entries/xml?range=${currentRange}`));
-    if (!response.ok) {
-      throw new Error('导出失败');
-    }
-    const text = await response.text();
-    const blob = new Blob([text], { type: 'application/xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `health-records-${currentRange}d.xml`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    showMessage('XML 已生成，请检查下载文件。');
-  } catch (error) {
-    showMessage('导出 XML 失败，请稍后重试。', true);
-  }
-}
-
 async function refreshData() {
   try {
     const entries = await fetchEntries(currentRange);
@@ -358,7 +335,6 @@ rangeButtons.forEach((button) => {
 });
 
 copySummaryBtn.addEventListener('click', copySummary);
-exportBtn.addEventListener('click', exportXml);
 
 if (isWeChatBrowser()) {
   wechatTip.classList.remove('hidden');
