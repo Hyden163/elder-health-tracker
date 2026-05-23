@@ -276,18 +276,13 @@ main {
   pointer-events: none;
 }
 
-.bp-row {
+.bp-stack {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 10px;
-  align-items: center;
+  gap: 4px;
 }
 
-.bp-sep {
-  font-size: 28px;
-  font-weight: 300;
-  color: var(--text-muted);
-  text-align: center;
+.bp-field {
+  margin-bottom: 0;
 }
 
 .period-toggle {

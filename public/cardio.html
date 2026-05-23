@@ -63,17 +63,20 @@
 
             <div class="field-row field-row-wide">
               <span class="field-label">血压</span>
-              <div class="bp-row">
-                <div class="input-with-unit">
-                  <label class="sr-only" for="systolic">高压</label>
-                  <input type="number" id="systolic" min="80" max="220" inputmode="numeric" placeholder="128" aria-label="高压" required />
-                  <span class="unit">高压</span>
+              <div class="bp-stack">
+                <div class="field-row bp-field">
+                  <label for="systolic">高压</label>
+                  <div class="input-with-unit">
+                    <input type="number" id="systolic" min="80" max="220" inputmode="numeric" placeholder="128" required />
+                    <span class="unit">高压</span>
+                  </div>
                 </div>
-                <span class="bp-sep" aria-hidden="true">/</span>
-                <div class="input-with-unit">
-                  <label class="sr-only" for="diastolic">低压</label>
-                  <input type="number" id="diastolic" min="40" max="140" inputmode="numeric" placeholder="78" aria-label="低压" required />
-                  <span class="unit">低压</span>
+                <div class="field-row bp-field">
+                  <label for="diastolic">低压</label>
+                  <div class="input-with-unit">
+                    <input type="number" id="diastolic" min="40" max="140" inputmode="numeric" placeholder="78" required />
+                    <span class="unit">低压</span>
+                  </div>
                 </div>
               </div>
             </div>
