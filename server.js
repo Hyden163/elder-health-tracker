@@ -5,10 +5,25 @@ const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'data', 'health.json');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DB_PATH = path.join(DATA_DIR, 'health.json');
+const FAMILY_ACCESS_KEY = process.env.FAMILY_ACCESS_KEY || '';
 
 app.use(cors());
 app.use(express.json());
+
+function requireFamilyKey(req, res, next) {
+  if (!FAMILY_ACCESS_KEY) {
+    return next();
+  }
+  const key = req.query.key || req.headers['x-family-key'];
+  if (key !== FAMILY_ACCESS_KEY) {
+    return res.status(401).json({ error: '访问密钥无效或缺失，请使用家人分享的完整链接' });
+  }
+  return next();
+}
+
+app.use('/api', requireFamilyKey);
 app.use(express.static(path.join(__dirname, 'public')));
 
 function loadDatabase() {

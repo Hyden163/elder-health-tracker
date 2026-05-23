@@ -2,17 +2,21 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>老人健康记录</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="page-shell">
+    <div id="wechat-tip" class="wechat-tip hidden" role="status">
+      您正在微信中打开。录入完成后可点「复制摘要」发到家庭群，方便家人查看。
+    </div>
+
     <header class="page-header">
       <div>
         <h1>健康记录</h1>
-        <p>早晚各一次录入心率、血压和血氧，查看近7天/30天/90天趋势。</p>
+        <p>早晚各录一次心率、血压和血氧。家人打开同一链接即可查看。</p>
       </div>
     </header>
 
@@ -21,51 +25,71 @@
         <h2>今天的录入</h2>
         <form id="entry-form">
           <div class="field-row">
-            <label>日期</label>
+            <label for="recordedAt">日期</label>
             <input type="date" id="recordedAt" required />
           </div>
           <div class="field-row">
-            <label>时间</label>
+            <label for="period">时间</label>
             <select id="period" required>
               <option value="morning">早晨</option>
               <option value="evening">晚上</option>
             </select>
           </div>
           <div class="field-row">
-            <label>心率</label>
-            <input type="number" id="heartRate" min="30" max="180" placeholder="次/分钟" required />
+            <label for="heartRate">心率（次/分钟）</label>
+            <input type="number" id="heartRate" min="30" max="180" inputmode="numeric" placeholder="例如 72" required />
           </div>
           <div class="field-row">
-            <label>高压</label>
-            <input type="number" id="systolic" min="80" max="220" placeholder="收缩压" required />
+            <label for="systolic">高压（收缩压）</label>
+            <input type="number" id="systolic" min="80" max="220" inputmode="numeric" placeholder="例如 128" required />
           </div>
           <div class="field-row">
-            <label>低压</label>
-            <input type="number" id="diastolic" min="40" max="140" placeholder="舒张压" required />
+            <label for="diastolic">低压（舒张压）</label>
+            <input type="number" id="diastolic" min="40" max="140" inputmode="numeric" placeholder="例如 78" required />
           </div>
           <div class="field-row">
-            <label>血氧</label>
-            <input type="number" id="spo2" min="70" max="100" placeholder="%" required />
+            <label for="spo2">血氧（%）</label>
+            <input type="number" id="spo2" min="70" max="100" inputmode="numeric" placeholder="例如 98" required />
           </div>
           <button type="submit" class="btn-submit">提交录入</button>
-          <div id="message" class="message"></div>
+          <div id="message" class="message" aria-live="polite"></div>
         </form>
+
+        <div id="summary-panel" class="summary-panel hidden">
+          <h3>今日录入摘要</h3>
+          <p id="summary-text" class="summary-text"></p>
+          <button type="button" id="copy-summary-btn" class="btn-copy">复制摘要，发到微信群</button>
+        </div>
       </section>
 
       <section class="card chart-card">
-        <div class="chart-header">
-          <h2>趋势图</h2>
-          <div class="range-buttons">
-            <button data-range="7" class="range-btn active">近7天</button>
-            <button data-range="30" class="range-btn">近30天</button>
-            <button data-range="90" class="range-btn">近90天</button>
+        <button type="button" id="toggle-charts-btn" class="chart-toggle" aria-expanded="false">
+          <span>查看趋势与历史记录</span>
+          <span class="chart-toggle-icon" aria-hidden="true">▼</span>
+        </button>
+
+        <div id="charts-body" class="charts-body collapsed">
+          <div class="chart-header">
+            <h2>趋势图</h2>
+            <div class="range-buttons">
+              <button type="button" data-range="7" class="range-btn active">近7天</button>
+              <button type="button" data-range="30" class="range-btn">近30天</button>
+              <button type="button" data-range="90" class="range-btn">近90天</button>
+            </div>
+            <button type="button" id="export-btn" class="btn-export">导出 XML</button>
           </div>
-          <button type="button" id="export-btn" class="btn-export">导出 XML</button>
-        </div>
-        <div class="chart-grid">
-          <div class="chart-box"><canvas id="heartRateChart"></canvas></div>
-          <div class="chart-box"><canvas id="bloodPressureChart"></canvas></div>
-          <div class="chart-box"><canvas id="spo2Chart"></canvas></div>
+
+          <section class="recent-list-section">
+            <h3>最近记录（列表）</h3>
+            <p class="recent-list-hint">图表加载慢时可先看列表，适合微信内浏览。</p>
+            <div id="recent-list" class="recent-list"></div>
+          </section>
+
+          <div class="chart-grid">
+            <div class="chart-box"><canvas id="heartRateChart"></canvas></div>
+            <div class="chart-box"><canvas id="bloodPressureChart"></canvas></div>
+            <div class="chart-box"><canvas id="spo2Chart"></canvas></div>
+          </div>
         </div>
       </section>
     </main>
