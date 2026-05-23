@@ -28,6 +28,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -38,6 +39,8 @@ body {
   font-size: 20px;
   line-height: 1.6;
   overscroll-behavior: contain;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -87,9 +90,12 @@ body {
 }
 
 .page-shell {
+  width: 100%;
   max-width: 640px;
   margin: 0 auto;
   padding: 16px 16px 48px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .wechat-tip {
@@ -107,12 +113,17 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   padding: 20px 18px;
   background: var(--surface);
   border-radius: var(--radius-lg);
   border: 2px solid var(--border-light);
   margin-bottom: 20px;
   box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .header-icon {
@@ -150,6 +161,7 @@ body {
 main {
   display: grid;
   gap: 20px;
+  min-width: 0;
 }
 
 .card {
@@ -158,6 +170,14 @@ main {
   border: 2px solid var(--border-light);
   padding: 24px 20px;
   box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.chart-card {
+  overflow: hidden;
 }
 
 .section-badge {
@@ -410,6 +430,8 @@ main {
 
 .charts-body {
   margin-top: 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .charts-body.collapsed {
@@ -462,6 +484,17 @@ main {
   flex-direction: column;
   gap: 14px;
   margin-bottom: 20px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chart-header .range-buttons {
+  width: 100%;
+}
+
+.chart-header .btn-admin {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .range-buttons {
@@ -529,6 +562,13 @@ main {
   font-size: 17px;
   color: var(--text-muted);
   line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.recent-list-section,
+.recent-list {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .recent-empty {
@@ -544,6 +584,8 @@ main {
 .chart-grid {
   display: grid;
   gap: 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .chart-box {
@@ -552,10 +594,21 @@ main {
   border-radius: var(--radius-md);
   border: 2px solid var(--border-light);
   min-height: 240px;
+  height: 240px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
 }
 
 .chart-box canvas {
-  min-height: 220px;
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: 0;
 }
 
 @media (min-width: 640px) {
@@ -576,6 +629,16 @@ main {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
+  }
+
+  .chart-header .range-buttons {
+    width: auto;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .chart-header .btn-admin {
+    width: auto;
   }
 
   .chart-grid {
@@ -612,7 +675,9 @@ main {
 
 /* Home branch chooser */
 .home-shell {
+  width: 100%;
   max-width: 640px;
+  box-sizing: border-box;
 }
 
 .home-header {
@@ -724,10 +789,6 @@ main {
 .btn-link-home:hover {
   background: var(--primary-soft);
   border-color: var(--primary);
-}
-
-.page-header {
-  flex-wrap: wrap;
 }
 
 .header-icon-glucose {

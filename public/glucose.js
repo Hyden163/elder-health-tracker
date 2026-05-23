@@ -220,12 +220,21 @@ async function refreshData() {
     if (chartsLoaded || toggleChartsBtn.getAttribute('aria-expanded') === 'true') {
       renderCharts(entries);
       chartsLoaded = true;
+      if (toggleChartsBtn.getAttribute('aria-expanded') === 'true') {
+        resizeCharts();
+      }
     }
     return entries;
   } catch (error) {
     showMessage(error.message || '加载数据失败，请稍后重试。', true);
     throw error;
   }
+}
+
+function resizeCharts() {
+  requestAnimationFrame(() => {
+    if (glucoseChart) glucoseChart.resize();
+  });
 }
 
 async function ensureChartsLoaded() {
@@ -244,6 +253,7 @@ toggleChartsBtn.addEventListener('click', async () => {
   chartsBody.classList.toggle('collapsed', expanded);
   if (!expanded) {
     await ensureChartsLoaded();
+    resizeCharts();
   }
 });
 

@@ -22,7 +22,7 @@
       </div>
       <div class="header-text">
         <h1>管理后台</h1>
-        <p>查看完整记录，下载 Excel 表格（CSV）</p>
+        <p>查看完整记录，勾选后可删除误录入，也可下载 CSV</p>
       </div>
       <a href="index.html" class="btn-link-home">返回首页</a>
     </header>
@@ -60,7 +60,10 @@
         </div>
         <div class="admin-toolbar-row">
           <p id="record-count" class="record-count">共 0 条记录</p>
-          <button type="button" id="download-btn" class="btn-submit btn-download">下载表格（CSV）</button>
+          <div class="admin-actions">
+            <button type="button" id="delete-btn" class="btn-submit btn-delete" disabled>删除所选</button>
+            <button type="button" id="download-btn" class="btn-submit btn-download">下载表格（CSV）</button>
+          </div>
         </div>
       </section>
 

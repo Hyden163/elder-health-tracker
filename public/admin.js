@@ -8,6 +8,7 @@ const tableHead = document.getElementById('table-head');
 const tableBody = document.getElementById('table-body');
 const recordCountEl = document.getElementById('record-count');
 const downloadBtn = document.getElementById('download-btn');
+const deleteBtn = document.getElementById('delete-btn');
 const rangeButtons = document.querySelectorAll('.admin-toolbar .range-btn');
 const passwordForm = document.getElementById('password-form');
 const passwordMessage = document.getElementById('password-message');
@@ -20,7 +21,8 @@ const urlParams = new URLSearchParams(window.location.search);
 let currentRange = '90';
 let currentType = urlParams.get('type') === 'glucose' ? 'glucose' : 'cardio';
 let adminKey = sessionStorage.getItem(STORAGE_KEY) || '';
-let columnCount = 7;
+let columnCount = 8;
+const selectedIds = new Set();
 
 const TABLE_SCHEMA = {
   cardio: {
@@ -79,8 +81,88 @@ function showLoginView() {
 
 function renderTableHead() {
   const schema = TABLE_SCHEMA[currentType];
-  columnCount = schema.colspan;
-  tableHead.innerHTML = `<tr>${schema.headers.map((h) => `<th>${h}</th>`).join('')}</tr>`;
+  columnCount = schema.colspan + 1;
+  tableHead.innerHTML = `
+    <tr>
+      <th class="col-check">
+        <input type="checkbox" id="select-all" aria-label="全选当前列表" />
+      </th>
+      ${schema.headers.map((h) => `<th>${h}</th>`).join('')}
+    </tr>
+  `;
+}
+
+function updateDeleteButton() {
+  const count = selectedIds.size;
+  deleteBtn.disabled = count === 0;
+  deleteBtn.textContent = count > 0 ? `删除所选（${count}）` : '删除所选';
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  updateDeleteButton();
+}
+
+function updateRowSelectedStyles() {
+  tableBody.querySelectorAll('tr').forEach((row) => {
+    const checkbox = row.querySelector('.row-check');
+    if (checkbox) {
+      row.classList.toggle('row-selected', checkbox.checked);
+    }
+  });
+}
+
+function bindTableSelection() {
+  const selectAll = document.getElementById('select-all');
+  const checkboxes = [...tableBody.querySelectorAll('.row-check')];
+
+  checkboxes.forEach((checkbox) => {
+    const id = Number(checkbox.dataset.id);
+    checkbox.checked = selectedIds.has(id);
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        selectedIds.add(id);
+      } else {
+        selectedIds.delete(id);
+      }
+      if (selectAll) {
+        selectAll.checked = checkboxes.length > 0 && checkboxes.every((cb) => cb.checked);
+      }
+      updateRowSelectedStyles();
+      updateDeleteButton();
+    });
+  });
+
+  if (selectAll) {
+    selectAll.checked = checkboxes.length > 0 && checkboxes.every((cb) => cb.checked);
+    selectAll.addEventListener('change', () => {
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = selectAll.checked;
+        const id = Number(checkbox.dataset.id);
+        if (selectAll.checked) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+      });
+      updateRowSelectedStyles();
+      updateDeleteButton();
+    });
+  }
+
+  updateRowSelectedStyles();
+  updateDeleteButton();
+}
+
+function checkboxCell(item) {
+  const label = currentType === 'glucose'
+    ? `选择 ${item.recordedAt} 血糖记录`
+    : `选择 ${item.recordedAt} ${periodLabel(item.period)} 记录`;
+  return `
+    <td class="col-check">
+      <input type="checkbox" class="row-check" data-id="${item.id}" aria-label="${label}" />
+    </td>
+  `;
 }
 
 function setActiveTypeTab() {
@@ -96,6 +178,7 @@ function renderTable(entries) {
 
   if (!entries.length) {
     tableBody.innerHTML = `<tr><td colspan="${columnCount}" class="table-empty">该时间范围内暂无记录</td></tr>`;
+    clearSelection();
     return;
   }
 
@@ -103,6 +186,7 @@ function renderTable(entries) {
     const sorted = [...entries].sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
     tableBody.innerHTML = sorted.map((item) => `
       <tr>
+        ${checkboxCell(item)}
         <td>${item.recordedAt}</td>
         <td>${formatGlucose(item.fasting)}</td>
         <td>${formatGlucose(item.afterBreakfast)}</td>
@@ -111,6 +195,7 @@ function renderTable(entries) {
         <td>${formatCreatedAt(item.updatedAt || item.createdAt)}</td>
       </tr>
     `).join('');
+    bindTableSelection();
     return;
   }
 
@@ -123,6 +208,7 @@ function renderTable(entries) {
 
   tableBody.innerHTML = sorted.map((item) => `
     <tr>
+      ${checkboxCell(item)}
       <td>${item.recordedAt}</td>
       <td>${periodLabel(item.period)}</td>
       <td>${item.heartRate}</td>
@@ -132,6 +218,7 @@ function renderTable(entries) {
       <td>${formatCreatedAt(item.createdAt)}</td>
     </tr>
   `).join('');
+  bindTableSelection();
 }
 
 async function loadEntries() {
@@ -166,6 +253,44 @@ async function loadEntries() {
 
 function downloadCsv() {
   window.location.href = apiUrl(`/api/admin/entries/export?range=${currentRange}`);
+}
+
+async function deleteSelected() {
+  if (selectedIds.size === 0) {
+    return;
+  }
+
+  const confirmed = window.confirm(`确定删除选中的 ${selectedIds.size} 条记录吗？此操作不可恢复。`);
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await fetch(apiUrl('/api/admin/entries'), {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': adminKey,
+      },
+      body: JSON.stringify({ ids: [...selectedIds] }),
+    });
+    const result = await response.json();
+    if (response.status === 401) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      adminKey = '';
+      showLoginView();
+      showLoginMessage(result.error || '登录已失效，请重新登录。', true);
+      return;
+    }
+    if (!response.ok) {
+      window.alert(result.error || '删除失败。');
+      return;
+    }
+    clearSelection();
+    await loadEntries();
+  } catch (error) {
+    window.alert('网络异常，请稍后重试。');
+  }
 }
 
 loginForm.addEventListener('submit', async (event) => {
@@ -252,6 +377,7 @@ rangeButtons.forEach((button) => {
     rangeButtons.forEach((btn) => btn.classList.remove('active'));
     button.classList.add('active');
     currentRange = button.dataset.range;
+    clearSelection();
     await loadEntries();
   });
 });
@@ -259,6 +385,7 @@ rangeButtons.forEach((button) => {
 typeTabs.forEach((tab) => {
   tab.addEventListener('click', async () => {
     currentType = tab.dataset.type === 'glucose' ? 'glucose' : 'cardio';
+    clearSelection();
     setActiveTypeTab();
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.set('type', currentType);
@@ -268,6 +395,7 @@ typeTabs.forEach((tab) => {
 });
 
 downloadBtn.addEventListener('click', downloadCsv);
+deleteBtn.addEventListener('click', deleteSelected);
 
 const urlKey = urlParams.get('key');
 if (urlKey) {

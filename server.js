@@ -290,6 +290,32 @@ app.get('/api/admin/entries/export', requireAdmin, (req, res) => {
   res.send(csv);
 });
 
+app.delete('/api/admin/entries', requireAdmin, (req, res) => {
+  const type = getAdminType(req);
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '请选择要删除的记录' });
+  }
+
+  const idSet = new Set(ids.map((id) => Number(id)).filter((id) => Number.isFinite(id)));
+  if (!idSet.size) {
+    return res.status(400).json({ error: '请选择要删除的记录' });
+  }
+
+  const db = loadDatabase();
+  const key = type === 'glucose' ? 'glucoseEntries' : 'cardioEntries';
+  const beforeCount = db[key].length;
+  db[key] = db[key].filter((item) => !idSet.has(Number(item.id)));
+  const deleted = beforeCount - db[key].length;
+
+  if (deleted === 0) {
+    return res.status(404).json({ error: '未找到要删除的记录' });
+  }
+
+  saveDatabase(db);
+  res.json({ success: true, deleted });
+});
+
 app.use('/api', requireFamilyKey);
 
 app.get('/api/entries', (req, res) => {
