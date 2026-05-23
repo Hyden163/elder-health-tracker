@@ -19,6 +19,9 @@ main:
         - name: package
           script: |
             echo "Package app into artifacts/app.zip"
+            if ! command -v zip >/dev/null 2>&1; then
+              apt-get update -qq && apt-get install -y -qq zip
+            fi
             mkdir -p artifacts
             zip -r artifacts/app.zip . -x "node_modules/*" "artifacts/*" ".git/*" "*.log"
       artifacts:
