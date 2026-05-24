@@ -48,7 +48,13 @@
 
 ## 部署到公网（HTTPS）
 
-微信内置浏览器要求使用 **HTTPS**。推荐 Render、Railway 或你已在用的 CNB 平台。
+微信内置浏览器要求使用 **HTTPS**。
+
+| 需求 | 推荐方案 |
+|------|----------|
+| **7×24、固定链接、不用每天管** | [微信云托管](#腾讯云云托管推荐724-固定链接)（下文详述） |
+| 已在用 CNB、偶尔点一下可以接受 | [CNB 仅预览模式](#cnb-仅预览模式推荐已在用-cnb-时) |
+| 国外平台 | Render / Railway |
 
 ### 通用配置
 
@@ -135,20 +141,114 @@ CNB 社区版**没有**单独的「部署服务」菜单。推荐用 **仅预览
 - [ ] 录入后另一台手机刷新能看到新数据
 - [ ] 关闭环境再启动后，历史数据仍在
 
-### 腾讯云云托管（可选，7×24 固定链接）
+### 腾讯云云托管（推荐：7×24 固定链接）
 
-若希望**完全不用每天管**、链接长期稳定，可把同一套代码部署到 [腾讯云云托管](https://cloud.tencent.com/document/product/1243/49237)（与 CNB 同属腾讯生态）。
+若希望**完全不用每天管**、微信群链接**长期不变**，请用 **微信云托管**（腾讯云旗下，微信扫码登录，适合本应用）。
 
-仓库根目录已提供 [`Dockerfile`](Dockerfile)，可按以下步骤操作：
+仓库已提供 [`Dockerfile`](Dockerfile)、[`.dockerignore`](.dockerignore)。按下面步骤操作即可。
 
-1. 注册腾讯云 → 开通 **云开发 / 云托管**。
-2. 新建服务 → **上传代码包** 或关联 Git 仓库。
-3. 配置：
-   - 启动命令：`npm start`
-   - 端口：`3000`（或平台注入的 `PORT`）
-   - 环境变量：`DATA_DIR=/data`，并挂载持久化卷到 `/data`
-   - （推荐）`FAMILY_ACCESS_KEY=随机字符串`
-4. 部署完成后获得固定 HTTPS 域名，发到微信群。
+#### 第 1 步：打开控制台并创建环境
+
+1. 浏览器打开 [微信云托管控制台](https://cloud.weixin.qq.com/cloudrun)
+2. 微信扫码登录
+3. 若提示选择小程序/公众号：选任意一个你有的（没有可先注册测试号），或按提示**新建环境**
+4. 新建环境时填一个名称（如 `health-family`），记下环境 ID
+
+#### 第 2 步：创建服务
+
+1. 点击 **新建服务**
+2. 服务名称填：`elder-health-tracker`
+3. **开启「允许公网访问」**（必须，否则微信打不开）
+4. 创建完成后进入该服务详情
+
+#### 第 3 步：打包并上传代码
+
+在 Mac 终端执行（生成上传用的 zip）：
+
+```bash
+cd '/Users/Hyden/Working Space/Vibe coding/health data'
+chmod +x scripts/package-cloudrun.sh
+./scripts/package-cloudrun.sh
+```
+
+会得到 `elder-health-cloudrun.zip`。
+
+回到云托管控制台：
+
+1. 进入 `elder-health-tracker` 服务 → **部署发布** → **新建版本**
+2. 选择方式：**手动上传代码包**
+3. 上传 `elder-health-cloudrun.zip`
+4. 构建方式选 **Dockerfile 构建**（使用仓库根目录的 Dockerfile）
+5. **容器端口**填：`3000`
+6. 环境变量（点「添加」）：
+
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `NODE_ENV` | `production` | 生产模式 |
+| `DATA_DIR` | `/data` | 数据目录（见下一步挂载） |
+| `FAMILY_ACCESS_KEY` | 一串随机字符 | 可选，限制只有家人能访问 |
+
+7. 点击 **发布**，等待约 3–5 分钟（构建 + 部署）
+
+#### 第 4 步：配置数据持久化（重要）
+
+不配置的话，重新部署后健康数据会丢失。
+
+1. 在服务详情 → **存储挂载** → **启用存储挂载**
+2. 类型选 **对象存储（COS）** → 使用云开发对象存储即可
+3. **实例挂载路径**填：`/data`（与 `DATA_DIR` 一致）
+4. 保存后**再发布一次**新版本（或重启服务）
+
+#### 第 5 步：发布并拿到固定链接
+
+1. 版本状态变为 **正常** 后，进入 **服务设置** 或 **公网访问**
+2. 复制默认域名，形如：
+   ```text
+   https://elder-health-tracker-xxxxx.ap-shanghai.app.tcloudbase.com
+   ```
+3. 浏览器打开测试 → 手机微信打开测试 → 录入一条数据
+
+#### 第 6 步：发到家庭微信群
+
+```text
+爸妈健康记录：https://你的固定域名
+点链接录入，早晚各一次。建议置顶。
+```
+
+若设置了 `FAMILY_ACCESS_KEY`，链接要带参数：
+
+```text
+https://你的固定域名/?key=你设置的随机字符
+```
+
+#### 从 CNB 迁移已有数据（一次性）
+
+1. 在 CNB WebIDE 或仅预览环境里执行 `cat data/health.json`，复制全部内容
+2. 云托管部署成功后，在管理页重新录入；或联系会操作的人把 JSON 写入挂载的 `/data/health.json`
+
+#### 日常维护
+
+| 情况 | 你要做什么 |
+|------|------------|
+| 正常使用 | **什么都不用做**，7×24 在线 |
+| 改了代码要更新 | 重新 `./scripts/package-cloudrun.sh` → 云托管 **新建版本** 上传 zip |
+| 链接突然 404 | 到控制台看服务是否在运行，一般会自动恢复 |
+
+#### 费用说明
+
+微信云托管有免费额度，家庭小规模使用通常很低。具体以 [微信云托管定价](https://cloud.weixin.qq.com/cloudrun/price) 为准。
+
+#### 备选：从 GitHub 自动部署
+
+若不想每次手动 zip，可在云托管 **新建流水线** → 绑定 GitHub 仓库 `Hyden163/elder-health-tracker`、分支 `main`，push 代码后自动构建。首次仍建议用手动上传跑通。
+
+CLI 用户可复制 [`cloudbaserc.example.json`](cloudbaserc.example.json) 为 `cloudbaserc.json` 后执行 `tcb cloudrun deploy`（需先安装 [CloudBase CLI](https://docs.cloudbase.net/cli-v1/install)）。
+
+#### 云托管验收
+
+- [ ] 固定 HTTPS 链接在微信里能打开
+- [ ] 老人能录入，子女另一台手机能看到
+- [ ] 重新部署后历史数据仍在（已配置 `/data` 存储挂载）
 
 ### 部署验收
 

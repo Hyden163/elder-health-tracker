@@ -423,6 +423,6 @@ app.post('/api/glucose/entries', (req, res) => {
   res.json({ success: true, id: newEntry.id, updated: false });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT} (DATA_DIR=${DATA_DIR})`);
 });

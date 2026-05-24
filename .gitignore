@@ -3,3 +3,6 @@ node_modules/
 server.log
 .DS_Store
 health-app-package.zip
+elder-health-cloudrun.zip
+data/health.json
+.env

@@ -1,0 +1,15 @@
+{
+  "envId": "填写你的云开发环境 ID",
+  "cloudrun": {
+    "elder-health-tracker": {
+      "buildDir": ".",
+      "dockerfile": "Dockerfile",
+      "containerPort": 3000,
+      "envVariables": {
+        "NODE_ENV": "production",
+        "DATA_DIR": "/data",
+        "FAMILY_ACCESS_KEY": "换成随机字符串"
+      }
+    }
+  }
+}

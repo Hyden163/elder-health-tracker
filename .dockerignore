@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.git
+.cursor
+.vscode
+.idea
+data/health.json
+data/*.json
+artifacts
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+health-app-package.zip
+elder-health-cloudrun.zip
