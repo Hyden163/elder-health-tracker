@@ -77,11 +77,78 @@ DATA_DIR=/var/data
 3. 添加 **Persistent Disk**，挂载路径如 `/var/data`，并设置 `DATA_DIR=/var/data`。
 4. 部署完成后获得 `https://xxx.onrender.com`，用微信打开测试。
 
-### Railway / CNB
+### Railway
 
-- 同样配置 `npm install` 与 `npm start`。
+- 配置 `npm install` 与 `npm start`。
 - 确认平台提供持久化存储，并设置 `DATA_DIR` 指向该路径。
-- 仓库内 [`.cnb.yml`](.cnb.yml) 已配置 CI 打包；正式对外访问需在控制台配置「部署服务」并绑定 HTTPS 域名。
+
+### CNB 仅预览模式（推荐，已在用 CNB 时）
+
+CNB 社区版**没有**单独的「部署服务」菜单。推荐用 **仅预览模式**：点一次「云原生开发」即自动启动应用并打开 HTTPS 预览页，**无需** WebIDE、手动装 Node、或映射端口。
+
+仓库已配置 [`.ide/Dockerfile`](.ide/Dockerfile) 与 [`.cnb.yml`](.cnb.yml) 中的 `$: vscode` 段。
+
+#### 第一次部署
+
+1. 把代码推到 CNB（在 Mac 终端）：
+   ```bash
+   cd '/Users/Hyden/Working Space/Vibe coding/health data'
+   git push cnb main
+   ```
+2. 打开 [CNB 仓库](https://cnb.cool/Plinkblink_Films/elder-health-tracker) → 点右上角 **「云原生开发」**。
+3. 等待约 1–2 分钟，浏览器会**自动打开**健康记录页面（不会进入 WebIDE）。
+4. 复制地址栏的 **HTTPS 链接**，发到家庭微信群并置顶，例如：
+   ```text
+   爸妈健康记录：https://xxxx.cnb.run
+   点链接录入，早晚各一次。
+   ```
+5. 手机微信打开链接，试录入一条数据。
+
+#### 日常使用
+
+| 情况 | 你要做什么 |
+|------|------------|
+| 家人正常早晚录入 | **什么都不用做**（有访问会自动保活，最长 24 小时） |
+| 链接打不开 | 再点一次 **「云原生开发」** 即可（比 WebIDE 少很多步骤） |
+
+#### 数据保存在哪
+
+- 健康数据在 `data/health.json`，CNB 会通过 `backup: true` 在环境重启后恢复。
+- **不要把** `data/health.json` 提交到 Git（含管理员密码哈希）。
+
+#### 从 WebIDE 迁移已有数据（一次性）
+
+若之前在 WebIDE 里录过数据：
+
+1. 在旧 WebIDE 终端执行 `cat data/health.json`，复制内容。
+2. 启动仅预览模式后，在环境里把文件写回 `data/health.json`；或数据不多时在网页里重新录入。
+
+#### 仅预览模式的局限
+
+- 不是严格 7×24：超过 24 小时且无人访问时环境会休眠，需再点「云原生开发」。
+- 预览链接可能随环境变化；若需要**固定域名、完全不用管**，见下文「腾讯云云托管」。
+
+#### 验收
+
+- [ ] 点「云原生开发」后自动打开页面（无需 WebIDE）
+- [ ] 手机微信能打开 HTTPS 链接
+- [ ] 录入后另一台手机刷新能看到新数据
+- [ ] 关闭环境再启动后，历史数据仍在
+
+### 腾讯云云托管（可选，7×24 固定链接）
+
+若希望**完全不用每天管**、链接长期稳定，可把同一套代码部署到 [腾讯云云托管](https://cloud.tencent.com/document/product/1243/49237)（与 CNB 同属腾讯生态）。
+
+仓库根目录已提供 [`Dockerfile`](Dockerfile)，可按以下步骤操作：
+
+1. 注册腾讯云 → 开通 **云开发 / 云托管**。
+2. 新建服务 → **上传代码包** 或关联 Git 仓库。
+3. 配置：
+   - 启动命令：`npm start`
+   - 端口：`3000`（或平台注入的 `PORT`）
+   - 环境变量：`DATA_DIR=/data`，并挂载持久化卷到 `/data`
+   - （推荐）`FAMILY_ACCESS_KEY=随机字符串`
+4. 部署完成后获得固定 HTTPS 域名，发到微信群。
 
 ### 部署验收
 

@@ -49,3 +49,16 @@ main:
             npm start &
             sleep 2
             echo "Process started"
+
+$:
+  vscode:
+    - docker:
+        build: .ide/Dockerfile
+      services:
+        - name: vscode
+          options:
+            onlyPreview: true
+            launch: PORT=8686 node server.js
+            keepAliveTimeout: 24h
+            daemon: true
+            backup: true
