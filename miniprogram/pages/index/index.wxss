@@ -75,8 +75,10 @@
 }
 
 .admin-entry {
-  text-align: center;
-  font-size: 26rpx;
-  color: #64748b;
+  display: block;
+  margin-top: 8rpx;
   padding: 24rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #64748b;
 }

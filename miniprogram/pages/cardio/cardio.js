@@ -1,4 +1,11 @@
 const api = require('../../utils/api');
+const { buildCardioCharts } = require('../../utils/chart-data');
+
+const RANGE_OPTIONS = [
+  { value: '7', label: '近7天' },
+  { value: '30', label: '近30天' },
+  { value: '90', label: '近90天' },
+];
 
 function todayString() {
   const d = new Date();
@@ -25,6 +32,13 @@ Page({
     summaryText: '',
     records: [],
     loadingList: true,
+    currentRange: '7',
+    rangeOptions: RANGE_OPTIONS,
+    chartsExpanded: false,
+    chartLabels: [],
+    heartChart: { title: '', series: [] },
+    bpChart: { title: '', series: [] },
+    spo2Chart: { title: '', series: [] },
   },
 
   onShow() {
@@ -36,7 +50,7 @@ Page({
   },
 
   onPeriodTap(e) {
-    this.setData({ period: e.detail.dataset.period });
+    this.setData({ period: e.currentTarget.dataset.period });
   },
 
   onInput(e) {
@@ -44,19 +58,49 @@ Page({
     this.setData({ [field]: e.detail.value });
   },
 
+  onRangeTap(e) {
+    this.setData({ currentRange: e.currentTarget.dataset.range });
+    this.loadRecords();
+  },
+
+  onToggleCharts() {
+    this.setData({ chartsExpanded: !this.data.chartsExpanded });
+  },
+
   buildSummary(payload) {
     return `${payload.recordedAt} ${periodLabel(payload.period)}：心率 ${payload.heartRate}，血压 ${payload.systolic}/${payload.diastolic}，血氧 ${payload.spo2}%。（打开小程序「老人健康记录」可查看趋势）`;
   },
 
+  applyCharts(entries) {
+    const charts = buildCardioCharts(entries);
+    this.setData({
+      chartLabels: charts.labels,
+      heartChart: charts.heart,
+      bpChart: charts.bloodPressure,
+      spo2Chart: charts.spo2,
+    });
+  },
+
   async loadRecords() {
+    const { currentRange } = this.data;
     this.setData({ loadingList: true });
     try {
-      const res = await api.getCardioEntries('7');
-      const records = (res.entries || []).slice(0, 20).map((item) => ({
-        ...item,
-        periodLabel: periodLabel(item.period),
-      }));
-      this.setData({ records, loadingList: false });
+      const res = await api.getCardioEntries(currentRange);
+      const entries = res.entries || [];
+      const records = [...entries]
+        .sort((a, b) => {
+          const ta = new Date(a.recordedAt).getTime();
+          const tb = new Date(b.recordedAt).getTime();
+          if (ta !== tb) return tb - ta;
+          return a.period === 'evening' ? -1 : 1;
+        })
+        .slice(0, 30)
+        .map((item) => ({
+          ...item,
+          periodLabel: periodLabel(item.period),
+        }));
+      this.applyCharts(entries);
+      this.setData({ records, loadingList: false, messageError: false });
     } catch (error) {
       this.setData({
         loadingList: false,
@@ -105,14 +149,10 @@ Page({
 
   onCopySummary() {
     const { summaryText } = this.data;
-    if (!summaryText) {
-      return;
-    }
+    if (!summaryText) return;
     wx.setClipboardData({
       data: summaryText,
-      success: () => {
-        wx.showToast({ title: '已复制', icon: 'success' });
-      },
+      success: () => wx.showToast({ title: '已复制', icon: 'success' }),
     });
   },
 });

@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "血糖记录"
+  "navigationBarTitleText": "血糖记录",
+  "usingComponents": {
+    "trend-chart": "/components/trend-chart/trend-chart"
+  }
 }

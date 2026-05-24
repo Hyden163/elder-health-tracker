@@ -1,0 +1,9 @@
+<view class="trend-chart-wrap">
+  <text class="trend-chart-title" wx:if="{{title}}">{{title}}</text>
+  <canvas
+    type="2d"
+    id="{{canvasId}}"
+    class="trend-canvas"
+    style="width: 100%; height: {{heightRpx}}rpx;"
+  ></canvas>
+</view>

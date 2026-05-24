@@ -1,3 +1,96 @@
 .page {
   padding: 24rpx;
 }
+
+.type-tabs,
+.range-row {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-bottom: 20rpx;
+}
+
+.type-tab,
+.range-btn {
+  flex: 1;
+  min-width: 120rpx;
+  min-height: 72rpx;
+  line-height: 72rpx;
+  font-size: 28rpx;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 12rpx;
+  border: 2rpx solid #e2e8f0;
+}
+
+.type-tab.active,
+.range-btn.active {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #0e7490;
+  font-weight: 600;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.record-count {
+  flex: 1;
+  font-size: 26rpx;
+  color: #64748b;
+}
+
+.btn-small {
+  font-size: 24rpx;
+  padding: 0 20rpx;
+  min-height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 12rpx;
+}
+
+.btn-delete {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-export {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.btn-logout {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.settings-toggle {
+  width: 100%;
+  text-align: left;
+  font-size: 30rpx;
+  color: #0e7490;
+  background: transparent;
+  padding: 0;
+}
+
+.password-form {
+  margin-top: 20rpx;
+}
+
+.admin-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #e2e8f0;
+}
+
+.admin-row-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #334155;
+  line-height: 1.5;
+}

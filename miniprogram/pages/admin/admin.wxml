@@ -1,59 +1,61 @@
 <view class="page">
-  <navigator url="/pages/index/index" class="btn-link-home" hover-class="none">← 返回首页</navigator>
-
   <view class="card" wx:if="{{!loggedIn}}">
     <view class="section-title">管理员登录</view>
-    <view class="section-hint">默认密码 123456，首次登录后建议修改</view>
+    <view class="section-hint">初始密码 123456，登录后可修改密码</view>
     <view class="field-row">
       <text class="field-label">管理员密码</text>
-      <input class="field-input" password type="text" value="{{loginPassword}}" bindinput="onLoginInput" placeholder="请输入密码" />
+      <input class="field-input" password type="text" value="{{password}}" bindinput="onPasswordInput" placeholder="请输入密码" />
     </view>
-    <button class="btn-primary" bindtap="onLogin" loading="{{loading}}">登录</button>
+    <button class="btn-primary" bindtap="onLogin" loading="{{loggingIn}}">进入后台</button>
     <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
   </view>
 
-  <block wx:if="{{loggedIn}}">
+  <block wx:else>
     <view class="card">
-      <view class="section-title">数据管理</view>
-      <view class="type-toggle">
-        <button class="type-btn {{currentType === 'cardio' ? 'active' : ''}}" data-type="cardio" bindtap="onTypeTap">心血管</button>
-        <button class="type-btn {{currentType === 'glucose' ? 'active' : ''}}" data-type="glucose" bindtap="onTypeTap">血糖</button>
+      <view class="type-tabs">
+        <button class="type-tab {{dataType === 'cardio' ? 'active' : ''}}" data-type="cardio" bindtap="onTypeTap">心血管</button>
+        <button class="type-tab {{dataType === 'glucose' ? 'active' : ''}}" data-type="glucose" bindtap="onTypeTap">血糖</button>
       </view>
-      <view class="range-toggle">
-        <button class="range-btn {{currentRange === '7' ? 'active' : ''}}" data-range="7" bindtap="onRangeTap">7天</button>
-        <button class="range-btn {{currentRange === '30' ? 'active' : ''}}" data-range="30" bindtap="onRangeTap">30天</button>
-        <button class="range-btn {{currentRange === '90' ? 'active' : ''}}" data-range="90" bindtap="onRangeTap">90天</button>
+      <view class="range-row">
+        <button wx:for="{{rangeOptions}}" wx:key="value" class="range-btn {{currentRange === item.value ? 'active' : ''}}" data-range="{{item.value}}" bindtap="onRangeTap">{{item.label}}</button>
       </view>
-      <view wx:if="{{loading}}" class="empty-tip">加载中…</view>
-      <view wx:elif="{{records.length === 0}}" class="empty-tip">暂无记录</view>
-      <view wx:else>
-        <view class="record-row" wx:for="{{records}}" wx:key="id" bindtap="onToggleSelect" data-id="{{item.id}}">
-          <checkbox class="record-check" checked="{{item.selected}}" />
-          <text>{{item.label}}</text>
-        </view>
+      <view class="admin-toolbar">
+        <text class="record-count">共 {{entries.length}} 条</text>
+        <button class="btn-small btn-delete" bindtap="onDelete" disabled="{{selectedCount === 0}}">删除所选{{selectedCount > 0 ? '(' + selectedCount + ')' : ''}}</button>
+        <button class="btn-small btn-export" bindtap="onExport">复制 CSV</button>
+        <button class="btn-small btn-logout" bindtap="onLogout">退出</button>
       </view>
-      <button class="btn-danger" bindtap="onDelete" disabled="{{selectedIds.length === 0 || loading}}">删除所选（{{selectedIds.length}}）</button>
-      <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
     </view>
 
     <view class="card">
-      <button class="btn-secondary" bindtap="togglePasswordForm">{{showPasswordForm ? '收起修改密码' : '管理密码'}}</button>
-      <block wx:if="{{showPasswordForm}}">
+      <button class="settings-toggle" bindtap="onTogglePassword">{{showPasswordForm ? '收起' : '管理密码'}}</button>
+      <view wx:if="{{showPasswordForm}}" class="password-form">
         <view class="field-row">
           <text class="field-label">旧密码</text>
-          <input class="field-input" password data-field="oldPassword" value="{{oldPassword}}" bindinput="onPasswordInput" />
+          <input class="field-input" password type="text" value="{{oldPassword}}" data-field="oldPassword" bindinput="onPwdInput" />
         </view>
         <view class="field-row">
           <text class="field-label">新密码</text>
-          <input class="field-input" password data-field="newPassword" value="{{newPassword}}" bindinput="onPasswordInput" />
+          <input class="field-input" password type="text" value="{{newPassword}}" data-field="newPassword" bindinput="onPwdInput" />
         </view>
         <view class="field-row">
           <text class="field-label">确认新密码</text>
-          <input class="field-input" password data-field="confirmPassword" value="{{confirmPassword}}" bindinput="onPasswordInput" />
+          <input class="field-input" password type="text" value="{{confirmPassword}}" data-field="confirmPassword" bindinput="onPwdInput" />
         </view>
-        <button class="btn-primary" bindtap="onChangePassword" loading="{{loading}}">保存新密码</button>
-      </block>
-      <button class="btn-secondary" style="margin-top: 16rpx;" bindtap="onLogout">退出登录</button>
+        <button class="btn-secondary" bindtap="onChangePassword">保存新密码</button>
+      </view>
+    </view>
+
+    <view class="card">
+      <view wx:if="{{loading}}" class="empty-tip">加载中…</view>
+      <view wx:elif="{{entries.length === 0}}" class="empty-tip">暂无记录</view>
+      <checkbox-group wx:else bindchange="onSelectChange">
+        <label class="admin-row" wx:for="{{entries}}" wx:key="id">
+          <checkbox value="{{item.id}}" checked="{{item.checked}}" color="#0e7490" />
+          <text class="admin-row-text">{{item.displayText}}</text>
+        </label>
+      </checkbox-group>
+      <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
     </view>
   </block>
 </view>

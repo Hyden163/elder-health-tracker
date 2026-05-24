@@ -1,4 +1,11 @@
 const api = require('../../utils/api');
+const { buildGlucoseChart } = require('../../utils/chart-data');
+
+const RANGE_OPTIONS = [
+  { value: '7', label: '近7天' },
+  { value: '30', label: '近30天' },
+  { value: '90', label: '近90天' },
+];
 
 function todayString() {
   const d = new Date();
@@ -24,6 +31,11 @@ Page({
     summaryText: '',
     records: [],
     loadingList: true,
+    currentRange: '7',
+    rangeOptions: RANGE_OPTIONS,
+    chartsExpanded: false,
+    chartLabels: [],
+    glucoseChart: { title: '', series: [] },
   },
 
   onShow() {
@@ -39,6 +51,15 @@ Page({
     this.setData({ [field]: e.detail.value });
   },
 
+  onRangeTap(e) {
+    this.setData({ currentRange: e.currentTarget.dataset.range });
+    this.loadRecords();
+  },
+
+  onToggleCharts() {
+    this.setData({ chartsExpanded: !this.data.chartsExpanded });
+  },
+
   buildSummary(payload) {
     return `${payload.recordedAt} 血糖：空腹 ${formatValue(payload.fasting)}，早餐后 ${formatValue(payload.afterBreakfast)}，午餐后 ${formatValue(payload.afterLunch)}，晚餐后 ${formatValue(payload.afterDinner)} mmol/L。（打开小程序「老人健康记录」可查看记录）`;
   },
@@ -51,18 +72,32 @@ Page({
     return Number.isFinite(num) ? num : null;
   },
 
+  applyChart(entries) {
+    const chart = buildGlucoseChart(entries);
+    this.setData({
+      chartLabels: chart.labels,
+      glucoseChart: { title: chart.title, series: chart.series },
+    });
+  },
+
   async loadRecords() {
+    const { currentRange } = this.data;
     this.setData({ loadingList: true });
     try {
-      const res = await api.getGlucoseEntries('7');
-      const records = (res.entries || []).slice(0, 20).map((item) => ({
-        ...item,
-        fasting: formatValue(item.fasting),
-        afterBreakfast: formatValue(item.afterBreakfast),
-        afterLunch: formatValue(item.afterLunch),
-        afterDinner: formatValue(item.afterDinner),
-      }));
-      this.setData({ records, loadingList: false });
+      const res = await api.getGlucoseEntries(currentRange);
+      const entries = res.entries || [];
+      const records = [...entries]
+        .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt))
+        .slice(0, 30)
+        .map((item) => ({
+          ...item,
+          fasting: formatValue(item.fasting),
+          afterBreakfast: formatValue(item.afterBreakfast),
+          afterLunch: formatValue(item.afterLunch),
+          afterDinner: formatValue(item.afterDinner),
+        }));
+      this.applyChart(entries);
+      this.setData({ records, loadingList: false, messageError: false });
     } catch (error) {
       this.setData({
         loadingList: false,
@@ -115,14 +150,10 @@ Page({
 
   onCopySummary() {
     const { summaryText } = this.data;
-    if (!summaryText) {
-      return;
-    }
+    if (!summaryText) return;
     wx.setClipboardData({
       data: summaryText,
-      success: () => {
-        wx.showToast({ title: '已复制', icon: 'success' });
-      },
+      success: () => wx.showToast({ title: '已复制', icon: 'success' }),
     });
   },
 });

@@ -1,5 +1,4 @@
 <view class="page">
-  <navigator url="/pages/index/index" class="btn-link-home" hover-class="none">← 返回首页</navigator>
   <view class="card">
     <view class="section-title">第一步 · 填写数据</view>
     <view class="section-hint">同一天可多次提交，新数值会合并到当天记录</view>
@@ -42,7 +41,18 @@
   </view>
 
   <view class="card">
-    <view class="section-title">最近 7 天记录</view>
+    <view class="section-title">历史记录与趋势</view>
+    <view class="range-row">
+      <button wx:for="{{rangeOptions}}" wx:key="value" class="range-btn {{currentRange === item.value ? 'active' : ''}}" data-range="{{item.value}}" bindtap="onRangeTap">{{item.label}}</button>
+    </view>
+    <button class="btn-secondary toggle-charts" bindtap="onToggleCharts">{{chartsExpanded ? '收起趋势曲线' : '展开趋势曲线'}}</button>
+
+    <view wx:if="{{chartsExpanded}}">
+      <trend-chart wx:if="{{chartLabels.length}}" canvas-id="glucoseMain" title="{{glucoseChart.title}}" labels="{{chartLabels}}" series="{{glucoseChart.series}}" />
+      <view wx:if="{{!chartLabels.length}}" class="empty-tip">暂无趋势数据</view>
+    </view>
+
+    <view class="list-title">最近记录</view>
     <view wx:if="{{loadingList}}" class="empty-tip">加载中…</view>
     <view wx:elif="{{records.length === 0}}" class="empty-tip">暂无记录</view>
     <view wx:else>

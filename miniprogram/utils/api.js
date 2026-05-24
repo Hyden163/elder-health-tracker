@@ -1,11 +1,21 @@
 const config = require('../config');
 
+const ADMIN_STORAGE_KEY = 'health_admin_key';
+
 function withKey(path) {
   if (!config.familyAccessKey) {
     return path;
   }
   const sep = path.includes('?') ? '&' : '?';
   return `${path}${sep}key=${encodeURIComponent(config.familyAccessKey)}`;
+}
+
+function withAdminKey(path, adminPassword) {
+  if (!adminPassword) {
+    return path;
+  }
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}key=${encodeURIComponent(adminPassword)}`;
 }
 
 function parseBody(data) {
@@ -18,34 +28,55 @@ function parseBody(data) {
   try {
     return JSON.parse(data);
   } catch (error) {
-    return { error: String(data) };
+    return { error: String(data), raw: String(data) };
   }
 }
 
-function callApi(path, method, data, extraHeaders) {
+function callApi(path, method, data, options = {}) {
   if (!config.cloudEnv) {
     return Promise.reject(new Error('请先在 miniprogram/config.js 填写 cloudEnv（云托管环境 ID）'));
   }
 
+  const adminPassword = options.adminPassword || '';
+  let requestPath = withKey(path);
+  if (adminPassword) {
+    requestPath = withAdminKey(requestPath, adminPassword);
+  }
+
   return new Promise((resolve, reject) => {
-    const options = {
+    const header = {
+      'X-WX-SERVICE': config.serviceName,
+      'content-type': 'application/json',
+    };
+    if (adminPassword) {
+      header['x-admin-key'] = adminPassword;
+    }
+
+    const requestOptions = {
       config: { env: config.cloudEnv },
-      path: withKey(path),
+      path: requestPath,
       method,
-      header: {
-        'X-WX-SERVICE': config.serviceName,
-        'content-type': 'application/json',
-        ...extraHeaders,
-      },
+      header,
+      dataType: options.dataType || 'json',
     };
 
     if (data !== undefined && method !== 'GET') {
-      options.data = data;
+      requestOptions.data = data;
     }
 
     wx.cloud.callContainer({
-      ...options,
+      ...requestOptions,
       success(res) {
+        if (options.dataType === 'text') {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(typeof res.data === 'string' ? res.data : String(res.data || ''));
+            return;
+          }
+          const body = parseBody(res.data);
+          reject(new Error(body.error || `请求失败 (${res.statusCode})`));
+          return;
+        }
+
         const body = parseBody(res.data);
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(body);
@@ -60,8 +91,20 @@ function callApi(path, method, data, extraHeaders) {
   });
 }
 
-function adminHeaders(password) {
-  return password ? { 'x-admin-key': password } : {};
+function getStoredAdminPassword() {
+  try {
+    return wx.getStorageSync(ADMIN_STORAGE_KEY) || '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function setStoredAdminPassword(password) {
+  wx.setStorageSync(ADMIN_STORAGE_KEY, password);
+}
+
+function clearStoredAdminPassword() {
+  wx.removeStorageSync(ADMIN_STORAGE_KEY);
 }
 
 function getCardioEntries(range = '7') {
@@ -81,33 +124,43 @@ function postGlucoseEntry(payload) {
 }
 
 function adminLogin(password) {
-  return callApi('/api/admin/login', 'POST', { password });
+  return callApi('/api/admin/login', 'POST', { password }).then((res) => {
+    setStoredAdminPassword(password);
+    return res;
+  });
 }
 
-function getAdminEntries(type, range, password) {
-  return callApi(`/api/admin/entries?type=${type}&range=${range}`, 'GET', undefined, adminHeaders(password));
+function adminChangePassword(adminPassword, payload) {
+  return callApi('/api/admin/password', 'POST', payload, { adminPassword });
 }
 
-function deleteAdminEntries(type, ids, password) {
-  return callApi(`/api/admin/entries?type=${type}`, 'DELETE', { ids, password }, adminHeaders(password));
+function adminGetEntries(type, range, adminPassword) {
+  return callApi(`/api/admin/entries?type=${type}&range=${range}`, 'GET', undefined, { adminPassword });
 }
 
-function changeAdminPassword(oldPassword, newPassword, confirmPassword) {
-  return callApi('/api/admin/password', 'POST', {
-    oldPassword,
-    newPassword,
-    confirmPassword,
-    password: oldPassword,
-  }, adminHeaders(oldPassword));
+function adminDeleteEntries(type, ids, adminPassword) {
+  return callApi(`/api/admin/entries?type=${type}`, 'DELETE', { ids }, { adminPassword });
+}
+
+function adminExportCsv(type, range, adminPassword) {
+  return callApi(`/api/admin/entries/export?type=${type}&range=${range}`, 'GET', undefined, {
+    adminPassword,
+    dataType: 'text',
+  });
 }
 
 module.exports = {
+  ADMIN_STORAGE_KEY,
+  getStoredAdminPassword,
+  setStoredAdminPassword,
+  clearStoredAdminPassword,
   getCardioEntries,
   postCardioEntry,
   getGlucoseEntries,
   postGlucoseEntry,
   adminLogin,
-  getAdminEntries,
-  deleteAdminEntries,
-  changeAdminPassword,
+  adminChangePassword,
+  adminGetEntries,
+  adminDeleteEntries,
+  adminExportCsv,
 };

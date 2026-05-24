@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "心血管记录"
+  "navigationBarTitleText": "心血管记录",
+  "usingComponents": {
+    "trend-chart": "/components/trend-chart/trend-chart"
+  }
 }
