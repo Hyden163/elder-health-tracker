@@ -1,0 +1,59 @@
+<view class="page">
+  <navigator url="/pages/index/index" class="btn-link-home" hover-class="none">← 返回首页</navigator>
+
+  <view class="card" wx:if="{{!loggedIn}}">
+    <view class="section-title">管理员登录</view>
+    <view class="section-hint">默认密码 123456，首次登录后建议修改</view>
+    <view class="field-row">
+      <text class="field-label">管理员密码</text>
+      <input class="field-input" password type="text" value="{{loginPassword}}" bindinput="onLoginInput" placeholder="请输入密码" />
+    </view>
+    <button class="btn-primary" bindtap="onLogin" loading="{{loading}}">登录</button>
+    <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
+  </view>
+
+  <block wx:if="{{loggedIn}}">
+    <view class="card">
+      <view class="section-title">数据管理</view>
+      <view class="type-toggle">
+        <button class="type-btn {{currentType === 'cardio' ? 'active' : ''}}" data-type="cardio" bindtap="onTypeTap">心血管</button>
+        <button class="type-btn {{currentType === 'glucose' ? 'active' : ''}}" data-type="glucose" bindtap="onTypeTap">血糖</button>
+      </view>
+      <view class="range-toggle">
+        <button class="range-btn {{currentRange === '7' ? 'active' : ''}}" data-range="7" bindtap="onRangeTap">7天</button>
+        <button class="range-btn {{currentRange === '30' ? 'active' : ''}}" data-range="30" bindtap="onRangeTap">30天</button>
+        <button class="range-btn {{currentRange === '90' ? 'active' : ''}}" data-range="90" bindtap="onRangeTap">90天</button>
+      </view>
+      <view wx:if="{{loading}}" class="empty-tip">加载中…</view>
+      <view wx:elif="{{records.length === 0}}" class="empty-tip">暂无记录</view>
+      <view wx:else>
+        <view class="record-row" wx:for="{{records}}" wx:key="id" bindtap="onToggleSelect" data-id="{{item.id}}">
+          <checkbox class="record-check" checked="{{item.selected}}" />
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+      <button class="btn-danger" bindtap="onDelete" disabled="{{selectedIds.length === 0 || loading}}">删除所选（{{selectedIds.length}}）</button>
+      <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
+    </view>
+
+    <view class="card">
+      <button class="btn-secondary" bindtap="togglePasswordForm">{{showPasswordForm ? '收起修改密码' : '管理密码'}}</button>
+      <block wx:if="{{showPasswordForm}}">
+        <view class="field-row">
+          <text class="field-label">旧密码</text>
+          <input class="field-input" password data-field="oldPassword" value="{{oldPassword}}" bindinput="onPasswordInput" />
+        </view>
+        <view class="field-row">
+          <text class="field-label">新密码</text>
+          <input class="field-input" password data-field="newPassword" value="{{newPassword}}" bindinput="onPasswordInput" />
+        </view>
+        <view class="field-row">
+          <text class="field-label">确认新密码</text>
+          <input class="field-input" password data-field="confirmPassword" value="{{confirmPassword}}" bindinput="onPasswordInput" />
+        </view>
+        <button class="btn-primary" bindtap="onChangePassword" loading="{{loading}}">保存新密码</button>
+      </block>
+      <button class="btn-secondary" style="margin-top: 16rpx;" bindtap="onLogout">退出登录</button>
+    </view>
+  </block>
+</view>

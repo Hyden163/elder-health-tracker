@@ -22,7 +22,7 @@ function parseBody(data) {
   }
 }
 
-function callApi(path, method, data) {
+function callApi(path, method, data, extraHeaders) {
   if (!config.cloudEnv) {
     return Promise.reject(new Error('请先在 miniprogram/config.js 填写 cloudEnv（云托管环境 ID）'));
   }
@@ -35,6 +35,7 @@ function callApi(path, method, data) {
       header: {
         'X-WX-SERVICE': config.serviceName,
         'content-type': 'application/json',
+        ...extraHeaders,
       },
     };
 
@@ -59,6 +60,10 @@ function callApi(path, method, data) {
   });
 }
 
+function adminHeaders(password) {
+  return password ? { 'x-admin-key': password } : {};
+}
+
 function getCardioEntries(range = '7') {
   return callApi(`/api/entries?range=${range}`, 'GET');
 }
@@ -75,9 +80,34 @@ function postGlucoseEntry(payload) {
   return callApi('/api/glucose/entries', 'POST', payload);
 }
 
+function adminLogin(password) {
+  return callApi('/api/admin/login', 'POST', { password });
+}
+
+function getAdminEntries(type, range, password) {
+  return callApi(`/api/admin/entries?type=${type}&range=${range}`, 'GET', undefined, adminHeaders(password));
+}
+
+function deleteAdminEntries(type, ids, password) {
+  return callApi(`/api/admin/entries?type=${type}`, 'DELETE', { ids, password }, adminHeaders(password));
+}
+
+function changeAdminPassword(oldPassword, newPassword, confirmPassword) {
+  return callApi('/api/admin/password', 'POST', {
+    oldPassword,
+    newPassword,
+    confirmPassword,
+    password: oldPassword,
+  }, adminHeaders(oldPassword));
+}
+
 module.exports = {
   getCardioEntries,
   postCardioEntry,
   getGlucoseEntries,
   postGlucoseEntry,
+  adminLogin,
+  getAdminEntries,
+  deleteAdminEntries,
+  changeAdminPassword,
 };

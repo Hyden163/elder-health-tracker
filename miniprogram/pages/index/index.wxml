@@ -23,4 +23,6 @@
   <view class="tip card">
     <text class="tip-text">添加到「我的小程序」后，家人不用点链接，下拉微信即可打开。</text>
   </view>
+
+  <navigator url="/pages/admin/admin" class="admin-entry">管理入口（子女使用）</navigator>
 </view>

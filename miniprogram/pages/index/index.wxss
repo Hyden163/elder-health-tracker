@@ -73,3 +73,10 @@
   color: #64748b;
   line-height: 1.6;
 }
+
+.admin-entry {
+  text-align: center;
+  font-size: 26rpx;
+  color: #64748b;
+  padding: 24rpx;
+}

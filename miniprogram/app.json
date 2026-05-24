@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/cardio/cardio",
-    "pages/glucose/glucose"
+    "pages/glucose/glucose",
+    "pages/admin/admin"
   ],
   "window": {
     "navigationBarTitleText": "老人健康记录",

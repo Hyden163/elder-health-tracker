@@ -1,4 +1,5 @@
 <view class="page">
+  <navigator url="/pages/index/index" class="btn-link-home" hover-class="none">← 返回首页</navigator>
   <view class="card">
     <view class="section-title">第一步 · 填写数据</view>
     <view class="section-hint">同一天可多次提交，新数值会合并到当天记录</view>
