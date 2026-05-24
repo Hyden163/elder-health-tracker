@@ -1,0 +1,69 @@
+<view class="page">
+  <view class="card">
+    <view class="section-title">第一步 · 填写数据</view>
+    <view class="section-hint">早晚各录一次，数据家人都能看</view>
+
+    <view class="field-row">
+      <text class="field-label">日期</text>
+      <picker mode="date" value="{{recordedAt}}" bindchange="onDateChange">
+        <view class="field-input picker-value">{{recordedAt}}</view>
+      </picker>
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">时段</text>
+      <view class="period-toggle">
+        <button
+          class="period-btn {{period === 'morning' ? 'active' : ''}}"
+          data-period="morning"
+          bindtap="onPeriodTap"
+        >早晨</button>
+        <button
+          class="period-btn {{period === 'evening' ? 'active' : ''}}"
+          data-period="evening"
+          bindtap="onPeriodTap"
+        >晚上</button>
+      </view>
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">心率（次/分）</text>
+      <input class="field-input" type="number" value="{{heartRate}}" data-field="heartRate" bindinput="onInput" placeholder="72" />
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">高压</text>
+      <input class="field-input" type="number" value="{{systolic}}" data-field="systolic" bindinput="onInput" placeholder="128" />
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">低压</text>
+      <input class="field-input" type="number" value="{{diastolic}}" data-field="diastolic" bindinput="onInput" placeholder="78" />
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">血氧（%）</text>
+      <input class="field-input" type="number" value="{{spo2}}" data-field="spo2" bindinput="onInput" placeholder="98" />
+    </view>
+
+    <button class="btn-primary" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">保存记录</button>
+    <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
+
+    <view class="summary-box" wx:if="{{summaryText}}">
+      <view class="section-title">第二步 · 发给家人</view>
+      <text class="summary-text">{{summaryText}}</text>
+      <button class="btn-secondary summary-copy" bindtap="onCopySummary">复制摘要，发到微信群</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">最近 7 天记录</view>
+    <view wx:if="{{loadingList}}" class="empty-tip">加载中…</view>
+    <view wx:elif="{{records.length === 0}}" class="empty-tip">暂无记录</view>
+    <view wx:else>
+      <view class="record-item" wx:for="{{records}}" wx:key="id">
+        <text>{{item.recordedAt}} {{item.periodLabel}}：心率 {{item.heartRate}}，血压 {{item.systolic}}/{{item.diastolic}}，血氧 {{item.spo2}}%</text>
+      </view>
+    </view>
+  </view>
+</view>

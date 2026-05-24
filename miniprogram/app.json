@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/cardio/cardio",
+    "pages/glucose/glucose"
+  ],
+  "window": {
+    "navigationBarTitleText": "老人健康记录",
+    "navigationBarBackgroundColor": "#F7FAF9",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7FAF9"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -21,7 +21,76 @@
    http://localhost:3000
    ```
 
-## 微信群使用说明
+这是一个用于老人早晚录入心率、血压（高压/低压）和血氧，并展示近 7 天 / 30 天 / 90 天趋势的网页应用。家人可通过**微信小程序**（推荐）或微信群 HTTPS 链接录入或查看数据。
+
+## 微信小程序（个人号 · 推荐，不用发链接）
+
+个人小程序**不能**嵌入网页，因此仓库提供原生小程序代码（[`miniprogram/`](miniprogram/)），通过 `wx.cloud.callContainer` 调用你已部署的 **微信云托管** 服务 `elder-health-tracker`，**无需在群里发 HTTPS 链接**。
+
+### 架构
+
+- 小程序：录入界面 + 最近 7 天列表 + 复制摘要
+- 后端：现有 [`server.js`](server.js)（云托管上已运行的服务，无需改代码）
+- 数据：与网页版共用同一份 `health.json`
+
+### 第一步：完善小程序后台
+
+登录 [微信公众平台](https://mp.weixin.qq.com)：
+
+1. **小程序信息** → 填写名称（如「爸妈健康记录」）、图标、简介
+2. **小程序类目** → 选 **工具 → 信息查询** 或最接近的类目
+3. 记下 **AppID**（开发 → 开发管理 → 开发设置）
+4. **小程序备案** → 体验版可先跳过；正式版上线前必须完成
+
+### 第二步：云托管授权小程序
+
+1. 打开 [微信云托管控制台](https://cloud.weixin.qq.com/cloudrun)，环境选 **health-family**
+2. **设置** → **环境共享 / 授权小程序**（名称可能略有不同）
+3. 把小程序 **AppID** 加入授权列表
+
+### 第三步：配置并打开项目
+
+1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+2. 编辑 [`miniprogram/config.js`](miniprogram/config.js)：
+
+```js
+module.exports = {
+  cloudEnv: '你的云环境ID',      // 云托管 health-family 环境详情页复制
+  serviceName: 'elder-health-tracker',
+  familyAccessKey: '',          // 若云托管设置了 FAMILY_ACCESS_KEY 则填写
+};
+```
+
+3. 编辑 [`miniprogram/project.config.json`](miniprogram/project.config.json)，把 `appid` 改成你的 AppID
+4. 开发者工具 → **导入项目** → 目录选 `miniprogram/` → 后端服务选 **微信云托管**
+5. 点击 **编译** → 试录入一条心血管数据
+
+### 第四步：给家人用体验版
+
+1. 开发者工具 → **上传**
+2. 小程序后台 → **管理 → 版本管理** → 开发版本 → **选为体验版**
+3. **成员管理 → 体验成员** → 添加家人微信
+4. 家人扫体验版二维码 → **添加到我的小程序**
+
+以后从微信下拉「我的小程序」打开即可，**不用点链接**。
+
+### 小程序验收清单
+
+- [ ] 开发者工具编译后能打开首页
+- [ ] 心血管 / 血糖录入成功
+- [ ] 另一台手机体验版能看到新数据
+- [ ] 「复制摘要」可粘贴到微信群
+- [ ] 云托管 → 运行日志 有 `callContainer` 请求
+
+### 小程序局限（MVP）
+
+- 暂无趋势图（用列表代替；完整图表见网页版）
+- 管理删除仍用网页版 [`public/admin.html`](public/admin.html)
+- 体验版需添加体验成员；正式版需备案 + 审核
+
+---
+
+## 微信群使用说明（网页版 / 备用）
 
 ### 基本流程
 

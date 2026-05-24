@@ -1,0 +1,75 @@
+.page {
+  padding: 32rpx;
+}
+
+.hero {
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.hero-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12rpx;
+}
+
+.hero-sub {
+  display: block;
+  font-size: 28rpx;
+  color: #64748b;
+}
+
+.branch-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 36rpx 32rpx;
+  margin-bottom: 24rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(14, 116, 144, 0.08);
+}
+
+.branch-cardio {
+  border-left: 8rpx solid #0e7490;
+}
+
+.branch-card-glucose {
+  border-left: 8rpx solid #059669;
+}
+
+.branch-icon {
+  font-size: 56rpx;
+  width: 80rpx;
+  text-align: center;
+}
+
+.branch-text {
+  flex: 1;
+}
+
+.branch-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 8rpx;
+}
+
+.branch-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #64748b;
+}
+
+.tip {
+  margin-top: 16rpx;
+}
+
+.tip-text {
+  font-size: 26rpx;
+  color: #64748b;
+  line-height: 1.6;
+}

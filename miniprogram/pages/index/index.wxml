@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="hero">
+    <text class="hero-title">老人健康记录</text>
+    <text class="hero-sub">请选择今天要记录的项目</text>
+  </view>
+
+  <navigator url="/pages/cardio/cardio" class="branch-card branch-cardio">
+    <text class="branch-icon">♥</text>
+    <view class="branch-text">
+      <text class="branch-title">心血管数据</text>
+      <text class="branch-desc">记录心率、血压、血氧，早晚各一次</text>
+    </view>
+  </navigator>
+
+  <navigator url="/pages/glucose/glucose" class="branch-card branch-card-glucose">
+    <text class="branch-icon">💧</text>
+    <view class="branch-text">
+      <text class="branch-title">血糖数据</text>
+      <text class="branch-desc">记录空腹与三餐后血糖</text>
+    </view>
+  </navigator>
+
+  <view class="tip card">
+    <text class="tip-text">添加到「我的小程序」后，家人不用点链接，下拉微信即可打开。</text>
+  </view>
+</view>

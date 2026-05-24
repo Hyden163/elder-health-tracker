@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="card">
+    <view class="section-title">第一步 · 填写数据</view>
+    <view class="section-hint">同一天可多次提交，新数值会合并到当天记录</view>
+
+    <view class="field-row">
+      <text class="field-label">日期</text>
+      <picker mode="date" value="{{recordedAt}}" bindchange="onDateChange">
+        <view class="field-input picker-value">{{recordedAt}}</view>
+      </picker>
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">早上空腹血糖（mmol/L）</text>
+      <input class="field-input" type="digit" value="{{fasting}}" data-field="fasting" bindinput="onInput" placeholder="5.6" />
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">早餐后血糖（mmol/L）</text>
+      <input class="field-input" type="digit" value="{{afterBreakfast}}" data-field="afterBreakfast" bindinput="onInput" placeholder="7.8" />
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">午餐后血糖（mmol/L）</text>
+      <input class="field-input" type="digit" value="{{afterLunch}}" data-field="afterLunch" bindinput="onInput" placeholder="8.2" />
+    </view>
+
+    <view class="field-row">
+      <text class="field-label">晚餐后血糖（mmol/L）</text>
+      <input class="field-input" type="digit" value="{{afterDinner}}" data-field="afterDinner" bindinput="onInput" placeholder="7.5" />
+    </view>
+
+    <button class="btn-primary" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">保存记录</button>
+    <view class="message {{messageError ? 'error' : ''}}" wx:if="{{message}}">{{message}}</view>
+
+    <view class="summary-box" wx:if="{{summaryText}}">
+      <view class="section-title">第二步 · 发给家人</view>
+      <text class="summary-text">{{summaryText}}</text>
+      <button class="btn-secondary summary-copy" bindtap="onCopySummary">复制摘要，发到微信群</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">最近 7 天记录</view>
+    <view wx:if="{{loadingList}}" class="empty-tip">加载中…</view>
+    <view wx:elif="{{records.length === 0}}" class="empty-tip">暂无记录</view>
+    <view wx:else>
+      <view class="record-item" wx:for="{{records}}" wx:key="id">
+        <text>{{item.recordedAt}}：空腹 {{item.fasting}}，早餐后 {{item.afterBreakfast}}，午餐后 {{item.afterLunch}}，晚餐后 {{item.afterDinner}}</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -4,6 +4,7 @@ npm-debug.log
 .cursor
 .vscode
 .idea
+miniprogram
 data/health.json
 data/*.json
 artifacts

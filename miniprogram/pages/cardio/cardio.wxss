@@ -1,0 +1,35 @@
+.page {
+  padding: 24rpx;
+}
+
+.period-toggle {
+  display: flex;
+  gap: 16rpx;
+}
+
+.period-btn {
+  flex: 1;
+  min-height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 16rpx;
+  border: 2rpx solid #e2e8f0;
+}
+
+.period-btn.active {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #0e7490;
+  font-weight: 600;
+}
+
+.picker-value {
+  display: flex;
+  align-items: center;
+}
+
+.summary-copy {
+  margin-top: 20rpx;
+}

@@ -1,0 +1,12 @@
+.page {
+  padding: 24rpx;
+}
+
+.picker-value {
+  display: flex;
+  align-items: center;
+}
+
+.summary-copy {
+  margin-top: 20rpx;
+}
